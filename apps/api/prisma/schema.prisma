@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  email            String         @unique
+  emailVerified    Boolean        @default(false) @map("email_verified")
+  twoFactorEnabled Boolean?       @default(false) @map("two_factor_enabled")
+  username         String?        @unique
+  displayUsername  String?        @map("display_username")
+  role             String?        @default("user")
+  countryCode      String?        @map("country_code") @db.VarChar(2)
+  timezoneId       String?        @map("timezone_id") @db.Uuid
+  banned           Boolean?       @default(false)
+  banReason        String?        @map("ban_reason")
+  banExpires       DateTime?      @map("ban_expires")
+  image            String?
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  accounts         Account[]
+  passkeys         Passkey[]
+  twoFactors       TwoFactor[]
+  sessions         UserSession[]
+  members          Member[]
+  invitations      Invitation[]
+  items            Item[]
+  country          Country?       @relation(fields: [countryCode], references: [code], onDelete: SetNull)
+  timezone         Timezone?      @relation(fields: [timezoneId], references: [id], onDelete: SetNull)
+
+  @@map("user")
+}
+
+model Country {
+  code      String     @id @db.VarChar(2)
+  iso3      String?    @unique @db.VarChar(3)
+  name      String     @db.VarChar(100)
+  flag      String?    @db.VarChar(10)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  timezones Timezone[]
+  users     User[]
+
+  @@map("country")
+}
+
+model Timezone {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ianaName    String   @unique @map("iana_name") @db.VarChar(100)
+  displayName String   @map("display_name") @db.VarChar(100)
+  gmtOffset   String   @map("gmt_offset") @db.VarChar(20)
+  countryCode String   @map("country_code") @db.VarChar(2)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  country     Country  @relation(fields: [countryCode], references: [code], onDelete: Cascade)
+  users       User[]
+
+  @@index([countryCode])
+  @@map("timezone")
+}
+
+model UserSession {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  expiresAt            DateTime @map("expires_at")
+  token                String   @unique
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+  ipAddress            String?  @map("ip_address")
+  userAgent            String?  @map("user_agent")
+  userId               String   @map("user_id") @db.Uuid
+  activeOrganizationId String?  @map("active_organization_id")
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_session")
+}
+
+model Account {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id") @db.Uuid
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model TwoFactor {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  secret      String
+  backupCodes String  @map("backup_codes")
+  userId      String  @map("user_id") @db.Uuid
+  verified    Boolean @default(false)
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("two_factor")
+}
+
+model Passkey {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String?
+  publicKey    String    @map("public_key")
+  userId       String    @map("user_id") @db.Uuid
+  credentialId String    @map("credential_id")
+  transports   String?
+  createdAt    DateTime? @default(now()) @map("created_at")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("passkey")
+}
+
+model Organization {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  slug        String?      @unique
+  logo        String?
+  metadata    String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  members     Member[]
+  invitations Invitation[]
+  items       Item[]
+
+  @@map("organization")
+}
+
+model Member {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  role           String       @default("member")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  email          String
+  role           String?      @default("member")
+  status         String       @default("pending")
+  expiresAt      DateTime     @map("expires_at")
+  inviterId      String       @map("inviter_id") @db.Uuid
+  createdAt      DateTime     @default(now()) @map("created_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("invitation")
+}
+
+model Item {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String
+  description    String?
+  status         String        @default("active")
+  userId         String        @map("user_id") @db.Uuid
+  organizationId String?       @map("organization_id") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("item")
+}

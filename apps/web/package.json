@@ -1,0 +1,49 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "React 19 + Vite 8 SPA client with Tailwind CSS and TanStack Query.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "lint": "oxlint --deny-warnings src",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
+  },
+  "dependencies": {
+    "@better-auth/passkey": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "better-auth": "catalog:",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "country-flag-icons": "catalog:",
+    "i18next": "catalog:",
+    "lucide-react": "catalog:",
+    "motion": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-i18next": "catalog:",
+    "react-router-dom": "catalog:",
+    "sonner": "catalog:",
+    "tailwind-merge": "catalog:",
+    "tailwindcss": "catalog:",
+    "zod": "catalog:",
+    "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/config-typescript": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}
