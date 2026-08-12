@@ -11,10 +11,10 @@ COPY apps/web ./apps/web
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter web build
 
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:alpine3.22 AS runner
 
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
