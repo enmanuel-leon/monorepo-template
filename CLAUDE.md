@@ -67,6 +67,7 @@ This repository is a production-ready fullstack monorepo template built with Nod
 ### 8. Input Validation and Frontend Conventions
 
 - Validate user and external input at its boundary with Zod. Use `safeParse` for interactive validation so invalid input can be reported without throwing.
+- Keep password validation aligned with Better Auth: minimum 8 and maximum 128 characters.
 - Use `SyntheticEvent<HTMLFormElement>` for form handlers that only call `preventDefault`, and use a more specific event type when event data is needed. Do not use deprecated `FormEvent` aliases.
 - Use canonical Tailwind CSS v4 utilities, such as `bg-linear-to-r` instead of `bg-gradient-to-r`.
 

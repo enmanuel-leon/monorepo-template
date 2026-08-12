@@ -73,6 +73,7 @@ Report failed checks and environmental blockers instead of hiding or bypassing t
 
 - Validate interactive and external input at its boundary with Zod schemas.
 - Use `safeParse` when validation errors should be returned to a user rather than thrown.
+- Keep password validation aligned with Better Auth: minimum 8 and maximum 128 characters.
 - Use `SyntheticEvent<HTMLFormElement>` for React form handlers that only need `preventDefault`.
 - Use `ChangeEvent` or another specific event type when a handler needs event data.
 - Use canonical Tailwind CSS v4 utilities, including `bg-linear-to-r` for linear gradients.

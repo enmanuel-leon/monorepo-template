@@ -29,6 +29,26 @@ cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
+### WSL/Linux Host Requirement
+
+When working inside WSL, install Node.js and pnpm inside the Linux distribution. Do not rely on
+Windows `node`, `npm`, or `pnpm` shims exposed through `/mnt/c`.
+
+Verify the active Linux tools before running the CLI:
+
+```bash
+command -v node
+command -v pnpm
+node --version
+pnpm --version
+```
+
+Both commands must resolve to Linux paths. `npm cli` is not a valid project command; use `pnpm cli`
+after the Linux Node.js and pnpm prerequisites are available.
+
+VS Code tasks in this workspace use a login Bash automation profile so that NVM and the Linux Node.js
+toolchain are loaded automatically. Reload the VS Code window after changing shell configuration.
+
 ### 3. Start Local Infrastructure & DB Seed
 
 ```bash
@@ -39,6 +59,11 @@ pnpm infra:up
 pnpm db:push
 pnpm db:seed
 ```
+
+The seed administrator email and password are optional environment variables. If they are unset,
+the interactive CLI prompts for both values when a new administrator must be created. For
+non-interactive runs, set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` explicitly. The password must
+contain between 8 and 128 characters and is never stored in the seed source code.
 
 ### 4. Interactive Developer & SRE Console (`pnpm cli`)
 

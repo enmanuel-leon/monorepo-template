@@ -19,6 +19,8 @@ Use each file for a specific scope:
 
 - **Root `.env`**: Shared local infrastructure values consumed by Docker Compose, such as PostgreSQL, Redis, and MinIO settings.
 - **`apps/api/.env`**: Backend runtime values, including database, Redis, authentication, storage, email, and server settings.
+- **`SEED_ADMIN_EMAIL`**: Optional seed administrator email. The interactive CLI prompts for it when unset and defaults to `admin@example.com`.
+- **`SEED_ADMIN_PASSWORD`**: Optional seed administrator password. The interactive CLI prompts for it when unset; non-interactive runs must provide it when creating the administrator. It must contain between 8 and 128 characters and must never be committed.
 - **`apps/web/.env`**: Frontend build-time values. Only variables prefixed with `VITE_` are eligible for exposure in the browser.
 
 The root `.env` is not a secure secret store. Do not place backend secrets there unless the file is only consumed by a trusted backend or infrastructure process.
