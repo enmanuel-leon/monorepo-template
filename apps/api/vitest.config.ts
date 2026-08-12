@@ -10,6 +10,7 @@ export default defineConfig({
         'postgresql://postgres:postgres@localhost:5432/app_template_test_db?schema=public',
       BETTER_AUTH_SECRET: 'test-super-secret-key-32-chars-min-length',
       BETTER_AUTH_URL: 'http://localhost:3000',
+      EMAIL_ENABLED: 'false',
     },
     coverage: {
       provider: 'v8',

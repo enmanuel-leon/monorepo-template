@@ -2,15 +2,27 @@ import { z } from 'zod';
 import { NODE_ENVIRONMENTS } from '../constants/system.constants.js';
 import { STORAGE_PROVIDERS } from '../constants/storage.constants.js';
 
-try {
-  process.loadEnvFile('.env');
-} catch {
+function loadEnvFileWithoutOverridingProcessEnv(): void {
+  const processEnv = Object.fromEntries(Object.entries(process.env));
+
   try {
-    process.loadEnvFile('apps/api/.env');
+    process.loadEnvFile('.env');
   } catch {
-    // Ignored
+    try {
+      process.loadEnvFile('apps/api/.env');
+    } catch {
+      // Ignored when no environment file exists
+    }
+  }
+
+  for (const [key, value] of Object.entries(processEnv)) {
+    if (value !== undefined) {
+      process.env[key] = value;
+    }
   }
 }
+
+loadEnvFileWithoutOverridingProcessEnv();
 
 const envSchema = z.object({
   NODE_ENV: z
@@ -34,7 +46,10 @@ const envSchema = z.object({
   S3_REGION: z.string().optional(),
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
-  EMAIL_ENABLED: z.coerce.boolean().default(false),
+  EMAIL_ENABLED: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .default(false),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().optional(),
   SMTP_USER: z.string().optional(),

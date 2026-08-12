@@ -1,9 +1,17 @@
 import { defineConfig } from 'prisma/config';
 
+const processEnv = Object.fromEntries(Object.entries(process.env));
+
 try {
   process.loadEnvFile('.env');
 } catch {
-  // Ignored if file does not exist
+  // Ignored when no environment file exists
+}
+
+for (const [key, value] of Object.entries(processEnv)) {
+  if (value !== undefined) {
+    process.env[key] = value;
+  }
 }
 
 export default defineConfig({
