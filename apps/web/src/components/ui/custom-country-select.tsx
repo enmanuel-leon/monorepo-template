@@ -119,7 +119,7 @@ export function CustomCountrySelect({
 
             {filteredCountries.map((c) => {
               let isSelected = false;
-              if (selectedCountry && selectedCountry.code === c.code) {
+              if (selectedCountry?.code === c.code) {
                 isSelected = true;
               }
 

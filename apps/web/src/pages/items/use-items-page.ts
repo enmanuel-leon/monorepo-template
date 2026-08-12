@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authClient } from '../../lib/auth-client';
@@ -88,7 +88,7 @@ export function useItemsPage() {
     },
   });
 
-  function handleCreate(e: React.FormEvent) {
+  function handleCreate(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!title.trim()) {
       return;

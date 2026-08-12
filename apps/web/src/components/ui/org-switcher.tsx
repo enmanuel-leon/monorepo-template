@@ -55,7 +55,7 @@ export function OrgSwitcher({
 
           {organizations.map((org) => {
             let isCurrent = false;
-            if (currentOrg && currentOrg.id === org.id) {
+            if (currentOrg?.id === org.id) {
               isCurrent = true;
             }
 

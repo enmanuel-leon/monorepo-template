@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type SyntheticEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authClient } from '../../lib/auth-client';
@@ -23,7 +23,7 @@ export function useLoginPage() {
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    if (session.data?.user && session.data.user.emailVerified) {
+    if (session.data?.user?.emailVerified) {
       navigate('/', { replace: true });
     }
   }, [session.data?.user, navigate]);
@@ -67,7 +67,7 @@ export function useLoginPage() {
     setTab('signin');
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -112,7 +112,7 @@ export function useLoginPage() {
       }
 
       // If user is returned and account is already verified
-      if (signUpData && signUpData.user && signUpData.user.emailVerified) {
+      if (signUpData?.user?.emailVerified) {
         setIsUserAlreadyExistsError(true);
         setLoading(false);
         return;
@@ -152,7 +152,7 @@ export function useLoginPage() {
     navigate('/');
   }
 
-  async function handleVerifyOtp(e: React.FormEvent) {
+  async function handleVerifyOtp(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!otpCode.trim()) {
       return;

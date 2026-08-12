@@ -117,7 +117,7 @@ export function SettingsPage() {
           <div className="space-y-2">
             {organizations.map((org: OrgItem) => {
               let isCurrent = false;
-              if (activeOrg && activeOrg.id === org.id) {
+              if (activeOrg?.id === org.id) {
                 isCurrent = true;
               }
 

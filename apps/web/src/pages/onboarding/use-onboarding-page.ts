@@ -21,6 +21,23 @@ export interface CountryObj {
   timezones: TimezoneObj[];
 }
 
+function detectCountryCode(countries: CountryObj[]): string | null {
+  try {
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const matchedCountry = countries.find((country) =>
+      country.timezones?.some((timezone) => timezone.ianaName === userTimeZone),
+    );
+    return matchedCountry?.code || null;
+  } catch {
+    return null;
+  }
+}
+
+function findFirstTimezone(countries: CountryObj[], countryCode: string): TimezoneObj | null {
+  const matchedCountry = countries.find((country) => country.code === countryCode) || countries[0];
+  return matchedCountry?.timezones?.[0] || null;
+}
+
 export function useOnboardingPage() {
   const navigate = useNavigate();
   const session = authClient.useSession();
@@ -56,36 +73,20 @@ export function useOnboardingPage() {
 
   // Client-side browser timezone & country auto-detection
   useEffect(() => {
-    if (countries.length > 0) {
-      let detectedCode: string | null = null;
-      try {
-        const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (userTimeZone) {
-          for (const c of countries) {
-            if (c.timezones && c.timezones.some((tz) => tz.ianaName === userTimeZone)) {
-              detectedCode = c.code;
-              break;
-            }
-          }
-        }
-      } catch {
-        // Fallback
-      }
+    if (countries.length === 0) {
+      return;
+    }
 
-      let targetCode = countryCode;
-      if (detectedCode && countryCode === 'MX') {
-        targetCode = detectedCode;
-        setCountryCode(detectedCode);
-      }
+    const detectedCode = detectCountryCode(countries);
+    let targetCode = countryCode;
+    if (detectedCode && countryCode === 'MX') {
+      targetCode = detectedCode;
+      setCountryCode(detectedCode);
+    }
 
-      let matchedCountry = countries.find((c) => c.code === targetCode);
-      if (!matchedCountry) {
-        matchedCountry = countries[0];
-      }
-
-      if (matchedCountry && matchedCountry.timezones && matchedCountry.timezones.length > 0) {
-        setSelectedTimezone(matchedCountry.timezones[0]);
-      }
+    const timezone = findFirstTimezone(countries, targetCode);
+    if (timezone) {
+      setSelectedTimezone(timezone);
     }
   }, [countries, countryCode]);
 
@@ -131,7 +132,7 @@ export function useOnboardingPage() {
           slug,
         });
 
-        if (res && res.data) {
+        if (res?.data) {
           await authClient.organization.setActive({
             organizationId: res.data.id,
           });

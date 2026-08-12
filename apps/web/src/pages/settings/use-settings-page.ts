@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type SyntheticEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authClient } from '../../lib/auth-client';
 import type { CountryObj, TimezoneObj } from '../onboarding/use-onboarding-page';
@@ -62,7 +62,7 @@ export function useSettingsPage() {
         matchedCountry = countries[0];
       }
 
-      if (matchedCountry && matchedCountry.timezones && matchedCountry.timezones.length > 0) {
+      if (matchedCountry?.timezones?.length) {
         setSelectedTimezone(matchedCountry.timezones[0]);
       }
     }
@@ -90,7 +90,7 @@ export function useSettingsPage() {
     },
   });
 
-  async function handleCreateOrganization(e: React.FormEvent) {
+  async function handleCreateOrganization(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!newOrgName.trim()) {
       return;
