@@ -159,7 +159,7 @@ export function GuidedTour({ isOpen, onClose, steps }: Readonly<GuidedTourProps>
                   type="button"
                   size="sm"
                   onClick={handleNext}
-                  className="bg-gradient-to-r from-[#7B6CF6] to-[#6a5bf0] text-white gap-1"
+                  className="bg-linear-to-r from-[#7B6CF6] to-[#6a5bf0] text-white gap-1"
                 >
                   <span>{isLastStep ? t('tour.finish') : t('tour.next')}</span>
                   {!isLastStep && <ArrowRight className="w-3.5 h-3.5" />}

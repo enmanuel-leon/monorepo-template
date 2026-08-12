@@ -85,7 +85,7 @@ export function AppLayout() {
       <aside className="hidden md:flex w-64 border-r border-slate-200 bg-white p-5 dark:border-white/5 dark:bg-[#0A0B0D] flex-col justify-between sticky top-0 h-screen flex-none">
         <div>
           <div className="flex items-center gap-3 px-2 pb-5 border-b border-slate-200 dark:border-white/5 mb-5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7B6CF6] to-[#4FB0FF] flex items-center justify-center font-bold text-white text-base shadow-md shadow-indigo-500/20 flex-none">
+            <div className="w-8 h-8 rounded-xl bg-linear-to-br from-[#7B6CF6] to-[#4FB0FF] flex items-center justify-center font-bold text-white text-base shadow-md shadow-indigo-500/20 flex-none">
               <Layers className="w-4 h-4 text-white" />
             </div>
             <div className="min-w-0">
@@ -127,7 +127,7 @@ export function AppLayout() {
         {/* Bottom User Badge */}
         <div className="pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-sky-400 flex items-center justify-center font-semibold text-[#08090B] text-xs flex-none">
+            <div className="w-8 h-8 rounded-full bg-linear-to-br from-emerald-400 to-sky-400 flex items-center justify-center font-semibold text-[#08090B] text-xs flex-none">
               {userInitial}
             </div>
             <div className="min-w-0 flex-1">
@@ -153,7 +153,7 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
         <header className="sticky top-0 z-10 backdrop-blur-md bg-white/80 dark:bg-[#08090B]/80 border-b border-slate-200 dark:border-white/5 h-16 px-4 sm:px-8 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#7B6CF6] to-[#4FB0FF] flex md:hidden items-center justify-center font-bold text-white text-xs mr-1">
+            <div className="w-7 h-7 rounded-lg bg-linear-to-br from-[#7B6CF6] to-[#4FB0FF] flex md:hidden items-center justify-center font-bold text-white text-xs mr-1">
               <Layers className="w-3.5 h-3.5 text-white" />
             </div>
             {organization && (

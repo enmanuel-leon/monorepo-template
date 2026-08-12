@@ -72,7 +72,7 @@ export function OnboardingPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7B6CF6] to-[#4FB0FF] flex items-center justify-center font-bold text-white text-base">
+            <div className="w-8 h-8 rounded-xl bg-linear-to-br from-[#7B6CF6] to-[#4FB0FF] flex items-center justify-center font-bold text-white text-base">
               <Layers className="w-4 h-4 text-white" />
             </div>
             <span className="font-semibold text-lg tracking-tight text-white">App Template</span>
@@ -262,7 +262,7 @@ export function OnboardingPage() {
             type="button"
             onClick={handleNext}
             disabled={loading || (isStep2 && !orgName.trim())}
-            className="bg-gradient-to-r from-[#7B6CF6] to-[#6a5bf0] text-white px-6 py-2.5 rounded-xl gap-2 font-semibold shadow-lg shadow-indigo-500/20"
+            className="bg-linear-to-r from-[#7B6CF6] to-[#6a5bf0] text-white px-6 py-2.5 rounded-xl gap-2 font-semibold shadow-lg shadow-indigo-500/20"
           >
             <span>{isStep3 ? t('onboarding.confirmAndLaunch') : t('auth.continueBtn')}</span>
             <ArrowRight className="w-4 h-4" />
@@ -295,7 +295,7 @@ export function OnboardingPage() {
               type="button"
               onClick={handleConfirmLaunch}
               disabled={loading}
-              className="bg-gradient-to-r from-[#7B6CF6] to-[#6a5bf0] text-white font-semibold"
+              className="bg-linear-to-r from-[#7B6CF6] to-[#6a5bf0] text-white font-semibold"
             >
               {loading ? t('common.loading') : t('onboarding.confirmAndLaunch')}
             </Button>

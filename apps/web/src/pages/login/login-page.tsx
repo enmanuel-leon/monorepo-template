@@ -74,9 +74,9 @@ export function LoginPage() {
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* Left Hero Section */}
-      <div className="hidden lg:flex relative overflow-hidden bg-gradient-to-br from-[#12101F] via-[#0A0B0D] to-[#08090B] border-r border-white/5 p-14 flex-col justify-between">
+      <div className="hidden lg:flex relative overflow-hidden bg-linear-to-br from-[#12101F] via-[#0A0B0D] to-[#08090B] border-r border-white/5 p-14 flex-col justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7B6CF6] to-[#4FB0FF] flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-indigo-500/20">
+          <div className="w-9 h-9 rounded-xl bg-linear-to-br from-[#7B6CF6] to-[#4FB0FF] flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-indigo-500/20">
             <Layers className="w-5 h-5 text-white" />
           </div>
           <span className="font-semibold text-xl tracking-tight text-white">App Template</span>
@@ -189,7 +189,7 @@ export function LoginPage() {
                 <Button
                   type="submit"
                   disabled={loading || otpCode.trim().length < 6}
-                  className="w-full py-3 bg-gradient-to-r from-[#7B6CF6] to-[#6a5bf0] hover:from-[#6a5bf0] hover:to-[#5c4ce0] text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all"
+                  className="w-full py-3 bg-linear-to-r from-[#7B6CF6] to-[#6a5bf0] hover:from-[#6a5bf0] hover:to-[#5c4ce0] text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all"
                 >
                   {verifyOtpBtnText}
                 </Button>
@@ -274,7 +274,7 @@ export function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-[#7B6CF6] to-[#6a5bf0] hover:from-[#6a5bf0] hover:to-[#5c4ce0] text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all"
+                  className="w-full py-3 bg-linear-to-r from-[#7B6CF6] to-[#6a5bf0] hover:from-[#6a5bf0] hover:to-[#5c4ce0] text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all"
                   disabled={loading}
                 >
                   {submitBtnText}
