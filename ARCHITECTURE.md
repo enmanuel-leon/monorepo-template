@@ -32,6 +32,10 @@ This document defines the core technical architecture, invariants, and performan
 
 ## 🌐 Environment Variables Architecture & Precedence
 
+Environment configuration is scoped by application. The root `.env` is intended for Docker Compose infrastructure, `apps/api/.env` is for backend runtime settings, and `apps/web/.env` is for frontend build-time settings. Application-specific values override root values when a loader reads both files, while process, container, CI, and Kubernetes variables always have priority.
+
+Backend-only variables must remain in the API environment and must never be exposed to the browser. Vite only makes variables with the `VITE_` prefix available to frontend code, and those values are compiled into the production assets.
+
 Environment variables follow a strict hierarchy of precedence across development and production environments:
 
 1. **System Process Environment** (OS variables, Docker Secrets, Kubernetes Secrets/ConfigMaps) **[Highest Priority]**

@@ -18,8 +18,11 @@ Production-ready, highly optimized fullstack monorepo template built with **Fast
 # Clone or copy template
 cd monorepo-app-template
 
-# Install dependencies
+# Install dependencies and generate Prisma Client
 pnpm install
+
+# The install hook runs this automatically; this is the explicit equivalent:
+pnpm prisma:generate
 
 # Copy environment variables
 cp apps/api/.env.example apps/api/.env
@@ -76,6 +79,15 @@ Environment variables follow a strict hierarchy of precedence across local devel
 - **Production (Docker & Kubernetes)**:
   - **Do NOT commit `.env` files** to Git.
   - Production variables are injected directly into container memory via Kubernetes Secrets (`k8s/secrets.yaml`), ConfigMaps (`k8s/configmap.yaml`), or cloud provider environments.
+
+### Environment File Responsibilities
+
+- `.env` at the repository root is used for shared local infrastructure managed by Docker Compose.
+- `apps/api/.env` contains backend runtime configuration and secrets.
+- `apps/web/.env` contains frontend build-time values, normally using the `VITE_*` prefix.
+- When the same variable exists in multiple sources, process variables have the highest priority, followed by the application file, the root file, and finally code defaults.
+- The root `.env` is not automatically merged into every app process. Keep application files explicit unless a loader intentionally implements the root file as a fallback.
+- Backend-only values such as `DATABASE_URL`, `REDIS_URL`, storage credentials, and authentication secrets must not be exposed through the frontend.
 
 ### Frontend Build-Time Injection (`VITE_*`)
 
