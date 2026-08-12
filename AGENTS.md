@@ -37,6 +37,12 @@ Welcome, AI Agent / Developer! Read this document carefully before modifying cod
     - Stage only files belonging to the requested change. Never stage secrets, `.env` files, generated output, or unrelated user changes.
     - Use English Conventional Commit messages and keep unrelated concerns in separate commits.
     - After an authorized commit, report the commit hash and the exact files included. Do not push unless separately authorized.
+13. **Input Validation and Type Safety**:
+    - Validate external and interactive input at its boundary with Zod schemas; use `safeParse` when returning user-facing validation messages.
+    - Use `SyntheticEvent<HTMLFormElement>` for React form handlers that only need `preventDefault`; use `ChangeEvent` or another specific event type when event data is required.
+    - Do not introduce deprecated React event aliases such as `FormEvent`.
+14. **Tailwind CSS v4 Syntax**:
+    - Prefer canonical Tailwind v4 utilities, such as `bg-linear-to-r` instead of `bg-gradient-to-r`.
 
 ---
 

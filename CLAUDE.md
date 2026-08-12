@@ -64,7 +64,13 @@ This repository is a production-ready fullstack monorepo template built with Nod
 - **No `eslint-disable` or `oxlint-disable`:** Fix the root cause of linter warnings.
 - **Sonar Coverage Exclusions:** Configured via `sonar-project.properties` targeting LCOV output at `coverage/lcov.info`.
 
-### 8. Git & Commit Conventions
+### 8. Input Validation and Frontend Conventions
+
+- Validate user and external input at its boundary with Zod. Use `safeParse` for interactive validation so invalid input can be reported without throwing.
+- Use `SyntheticEvent<HTMLFormElement>` for form handlers that only call `preventDefault`, and use a more specific event type when event data is needed. Do not use deprecated `FormEvent` aliases.
+- Use canonical Tailwind CSS v4 utilities, such as `bg-linear-to-r` instead of `bg-gradient-to-r`.
+
+### 9. Git & Commit Conventions
 
 - **Conventional Commits:** Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`.
 - **Strict Line Length (100-char max in body):** Wrap commit headers and every line in body to <= 100 characters.

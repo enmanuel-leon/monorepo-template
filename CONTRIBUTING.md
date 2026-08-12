@@ -69,6 +69,14 @@ pnpm audit
 For API changes that require local services, start the infrastructure first with `pnpm infra:up`.
 Report failed checks and environmental blockers instead of hiding or bypassing them.
 
+## Validation and UI Conventions
+
+- Validate interactive and external input at its boundary with Zod schemas.
+- Use `safeParse` when validation errors should be returned to a user rather than thrown.
+- Use `SyntheticEvent<HTMLFormElement>` for React form handlers that only need `preventDefault`.
+- Use `ChangeEvent` or another specific event type when a handler needs event data.
+- Use canonical Tailwind CSS v4 utilities, including `bg-linear-to-r` for linear gradients.
+
 ## Review and Branch Protection
 
 The repository should enforce these controls in the Git hosting platform:
