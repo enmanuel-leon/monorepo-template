@@ -20,12 +20,7 @@ const config: KnipConfig = {
         'src/constants/**/*.ts',
       ],
       project: ['src/**/*.{ts,tsx}'],
-      ignoreDependencies: [
-        '@tanstack/react-table',
-        'class-variance-authority',
-        'tailwindcss',
-        'zod',
-      ],
+      ignoreDependencies: ['@tanstack/react-table', 'class-variance-authority', 'tailwindcss'],
     },
   },
 };
