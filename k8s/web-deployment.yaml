@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: app-template-web:latest
+          image: app-template-web:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

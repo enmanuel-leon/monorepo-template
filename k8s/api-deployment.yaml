@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: app-template-api:latest
+          image: app-template-api:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
