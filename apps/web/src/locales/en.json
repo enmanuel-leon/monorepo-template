@@ -31,6 +31,7 @@
     "signUpSub": "Start building in minutes",
     "email": "Email Address",
     "password": "Password",
+    "passwordRequirements": "Password must contain between 8 and 128 characters.",
     "name": "Full Name",
     "forgot": "Forgot password?",
     "dontHaveAccount": "Don't have an account?",

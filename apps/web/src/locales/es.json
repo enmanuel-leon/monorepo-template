@@ -31,6 +31,7 @@
     "signUpSub": "Empieza a construir en minutos",
     "email": "Correo Electrónico",
     "password": "Contraseña",
+    "passwordRequirements": "La contraseña debe tener entre 8 y 128 caracteres.",
     "name": "Nombre Completo",
     "forgot": "¿Olvidaste tu contraseña?",
     "dontHaveAccount": "¿No tienes una cuenta?",

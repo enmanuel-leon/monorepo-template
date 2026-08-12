@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authClient } from '../../lib/auth-client';
 import { useLocaleStore } from '../../stores/locale.store';
+import { registrationPasswordSchema } from '../../schemas/auth.schema';
 
 export function useRegisterPage() {
   const navigate = useNavigate();
@@ -37,6 +38,12 @@ export function useRegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!registrationPasswordSchema.safeParse(password).success) {
+      setError(t('auth.passwordRequirements'));
+      setLoading(false);
+      return;
+    }
 
     const { data: signUpData, error: err } = await authClient.signUp.email(
       {
