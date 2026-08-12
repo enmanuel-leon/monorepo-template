@@ -103,9 +103,7 @@ async function handleQualityMenu(): Promise<void> {
 async function main(): Promise<void> {
   intro('🚀 Monorepo App Template - Centralized Developer & SRE Console');
 
-  let running = true;
-
-  while (running) {
+  while (true) {
     const category = await select({
       message: 'Select category:',
       options: [
@@ -118,7 +116,6 @@ async function main(): Promise<void> {
     });
 
     if (isCancel(category) || category === 'exit') {
-      running = false;
       break;
     }
 
@@ -137,7 +134,9 @@ async function main(): Promise<void> {
   process.exit(0);
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   log.error(`Fatal error: ${(err as Error).message}`);
-  process.exit(1);
-});
+  process.exitCode = 1;
+}

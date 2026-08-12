@@ -37,7 +37,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string(),
   REDIS_URL: z.string().optional(),
   BETTER_AUTH_SECRET: z.string().min(32),
-  BETTER_AUTH_URL: z.string().url().default('http://localhost:3000'),
+  BETTER_AUTH_URL: z.url().default('http://localhost:3000'),
   STORAGE_PROVIDER: z
     .enum([STORAGE_PROVIDERS.LOCAL, STORAGE_PROVIDERS.S3, STORAGE_PROVIDERS.GCS])
     .default(STORAGE_PROVIDERS.LOCAL),

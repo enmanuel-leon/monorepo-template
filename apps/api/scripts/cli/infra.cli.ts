@@ -1,6 +1,9 @@
 import { spinner, log, text } from '@clack/prompts';
 import { spawnSync } from 'node:child_process';
+import { z } from 'zod';
 import { sendEmail } from '../../src/services/email/email.service.js';
+
+const emailSchema = z.email();
 
 export async function runInfraUp(): Promise<void> {
   const s = spinner();
@@ -70,7 +73,7 @@ export async function runSmtpTest(): Promise<void> {
     message: 'Enter recipient email address for SMTP test:',
     placeholder: 'user@example.com',
     validate: (val) => {
-      if (!val || !val.includes('@')) {
+      if (!emailSchema.safeParse(val).success) {
         return 'Please enter a valid email address';
       }
     },

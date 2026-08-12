@@ -39,7 +39,7 @@ function buildPlugins(): BetterAuthPlugin[] {
         if (_request?.headers) {
           const headerLocale =
             _request.headers.get('x-app-locale') || _request.headers.get('accept-language');
-          if (headerLocale && headerLocale.toLowerCase().startsWith('en')) {
+          if (headerLocale?.toLowerCase().startsWith('en')) {
             reqLocale = 'en';
           }
         }

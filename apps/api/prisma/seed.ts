@@ -178,7 +178,7 @@ async function main() {
       },
     });
 
-    if (res && res.user) {
+    if (res?.user) {
       const adminId = res.user.id;
 
       await prisma.user.update({
@@ -220,11 +220,11 @@ async function main() {
   }
 }
 
-main()
-  .catch((e) => {
-    console.error('Seed error:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+try {
+  await main();
+} catch (e) {
+  console.error('Seed error:', e);
+  process.exitCode = 1;
+} finally {
+  await prisma.$disconnect();
+}
