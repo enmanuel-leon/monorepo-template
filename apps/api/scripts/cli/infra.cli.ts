@@ -2,6 +2,7 @@ import { spinner, log, text } from '@clack/prompts';
 import { spawnSync } from 'node:child_process';
 import { z } from 'zod';
 import { sendEmail } from '../../src/services/email/email.service.js';
+import { getSafeCommandEnvironment, SYSTEM_COMMANDS } from '../../src/config/command.js';
 
 const emailSchema = z.email();
 
@@ -10,11 +11,12 @@ export async function runInfraUp(): Promise<void> {
   s.start('Starting local Docker containers (Postgres, Redis, MinIO)...');
 
   const res = spawnSync(
-    'docker',
+    SYSTEM_COMMANDS.DOCKER,
     ['compose', '-f', '../../docker/docker-compose.dev.yml', 'up', '-d'],
     {
       stdio: 'pipe',
       encoding: 'utf-8',
+      env: getSafeCommandEnvironment(),
     },
   );
 
@@ -32,11 +34,12 @@ export async function runInfraDown(): Promise<void> {
   s.start('Stopping local Docker containers...');
 
   const res = spawnSync(
-    'docker',
+    SYSTEM_COMMANDS.DOCKER,
     ['compose', '-f', '../../docker/docker-compose.dev.yml', 'down'],
     {
       stdio: 'pipe',
       encoding: 'utf-8',
+      env: getSafeCommandEnvironment(),
     },
   );
 
@@ -53,10 +56,15 @@ export async function runInfraStatus(): Promise<void> {
   const s = spinner();
   s.start('Checking Docker container status...');
 
-  const res = spawnSync('docker', ['compose', '-f', '../../docker/docker-compose.dev.yml', 'ps'], {
-    stdio: 'pipe',
-    encoding: 'utf-8',
-  });
+  const res = spawnSync(
+    SYSTEM_COMMANDS.DOCKER,
+    ['compose', '-f', '../../docker/docker-compose.dev.yml', 'ps'],
+    {
+      stdio: 'pipe',
+      encoding: 'utf-8',
+      env: getSafeCommandEnvironment(),
+    },
+  );
 
   if (res.status !== 0) {
     s.stop('Docker status check failed or Docker is not running.');

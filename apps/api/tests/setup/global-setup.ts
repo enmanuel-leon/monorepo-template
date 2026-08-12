@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { Client } from 'pg';
+import { getSafeCommandEnvironment, SYSTEM_COMMANDS } from '../../src/config/command.js';
 
 const TEST_DB_NAME = 'app_template_test_db';
 const ADMIN_CONNECTION_STRING = 'postgresql://postgres:postgres@localhost:5432/postgres';
@@ -25,8 +26,9 @@ async function ensureTestDatabase(): Promise<void> {
 function pushSchema(): void {
   console.log('Pushing Prisma schema to test database...');
   const result = spawnSync(
-    'pnpm',
+    SYSTEM_COMMANDS.NODE,
     [
+      SYSTEM_COMMANDS.PNPM_SCRIPT,
       'exec',
       'prisma',
       'db',
@@ -40,6 +42,7 @@ function pushSchema(): void {
     {
       stdio: 'pipe',
       encoding: 'utf-8',
+      env: getSafeCommandEnvironment(),
     },
   );
 

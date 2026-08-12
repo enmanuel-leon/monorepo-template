@@ -1,14 +1,16 @@
 import { spinner, log } from '@clack/prompts';
 import { spawnSync } from 'node:child_process';
+import { getSafeCommandEnvironment, SYSTEM_COMMANDS } from '../../src/config/command.js';
 
 export async function runQualityCheck(): Promise<void> {
   const s = spinner();
   s.start('Running workspace quality checks (format, oxlint, typecheck, vitest)...');
 
-  const res = spawnSync('pnpm', ['check'], {
+  const res = spawnSync(SYSTEM_COMMANDS.NODE, [SYSTEM_COMMANDS.PNPM_SCRIPT, 'check'], {
     stdio: 'pipe',
     encoding: 'utf-8',
     cwd: '../../',
+    env: getSafeCommandEnvironment(),
   });
 
   if (res.status !== 0) {
@@ -24,10 +26,11 @@ export async function runKnipCheck(): Promise<void> {
   const s = spinner();
   s.start('Running Knip scanner for dead code and unlisted dependencies...');
 
-  const res = spawnSync('pnpm', ['knip'], {
+  const res = spawnSync(SYSTEM_COMMANDS.NODE, [SYSTEM_COMMANDS.PNPM_SCRIPT, 'knip'], {
     stdio: 'pipe',
     encoding: 'utf-8',
     cwd: '../../',
+    env: getSafeCommandEnvironment(),
   });
 
   if (res.status !== 0) {

@@ -1,5 +1,26 @@
 import { auth } from '../src/lib/auth.js';
 import { prisma } from '../src/lib/prisma.js';
+import { SEED_DEFAULTS } from '../src/constants/seed.constants.js';
+import { seedAdminEmailSchema, seedAdminPasswordSchema } from '../src/schemas/seed.schema.js';
+
+function getSeedAdminEmail(): string {
+  const configuredEmail = process.env.SEED_ADMIN_EMAIL || SEED_DEFAULTS.ADMIN_EMAIL;
+  const result = seedAdminEmailSchema.safeParse(configuredEmail);
+  if (!result.success) {
+    throw new Error('SEED_ADMIN_EMAIL must contain a valid email address.');
+  }
+  return result.data;
+}
+
+function getSeedAdminPassword(): string {
+  const result = seedAdminPasswordSchema.safeParse(process.env.SEED_ADMIN_PASSWORD);
+  if (!result.success) {
+    throw new Error(
+      'SEED_ADMIN_PASSWORD is required when creating the admin. Run the interactive CLI or set the variable.',
+    );
+  }
+  return result.data;
+}
 
 interface CountrySeed {
   code: string;
@@ -165,15 +186,17 @@ async function main() {
     where: { ianaName: 'America/Mexico_City' },
   });
 
+  const seedAdminEmail = getSeedAdminEmail();
   const existingAdmin = await prisma.user.findUnique({
-    where: { email: 'admin@example.com' },
+    where: { email: seedAdminEmail },
   });
 
   if (!existingAdmin) {
+    const seedAdminPassword = getSeedAdminPassword();
     const res = await auth.api.signUpEmail({
       body: {
-        email: 'admin@example.com',
-        password: 'AdminPassword123!',
+        email: seedAdminEmail,
+        password: seedAdminPassword,
         name: 'Admin User',
       },
     });
@@ -214,7 +237,7 @@ async function main() {
       });
     }
 
-    console.log('Seed completed successfully. Admin created: admin@example.com');
+    console.log(`Seed completed successfully. Admin created: ${seedAdminEmail}`);
   } else {
     console.log('Admin user already exists.');
   }

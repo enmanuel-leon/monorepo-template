@@ -21,3 +21,8 @@ export const INVITATION_STATUS = {
 } as const;
 
 export type InvitationStatus = (typeof INVITATION_STATUS)[keyof typeof INVITATION_STATUS];
+
+export const PASSWORD_POLICY = {
+  MIN_LENGTH: 8,
+  MAX_LENGTH: 128,
+} as const;

@@ -8,6 +8,7 @@ import { env } from '../config/env.js';
 import { APP_NAME, AUTH_BASE_PATH } from '../config/constants.js';
 import { sendEmail } from '../services/email/email.service.js';
 import { logger } from '../config/logger.js';
+import { PASSWORD_POLICY } from '../constants/auth.constants.js';
 
 function buildTrustedOrigins(): string[] {
   const origins = [env.BETTER_AUTH_URL];
@@ -127,6 +128,8 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    minPasswordLength: PASSWORD_POLICY.MIN_LENGTH,
+    maxPasswordLength: PASSWORD_POLICY.MAX_LENGTH,
     requireEmailVerification: env.EMAIL_ENABLED,
     autoSignIn: !env.EMAIL_ENABLED,
   },
