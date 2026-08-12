@@ -7,6 +7,8 @@
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "i18n-ally.localesPaths": ["apps/web/src/locales"],
+  "i18n-ally.pathMatcher": "{locale}.json",
+  "i18n-ally.keystyle": "nested",
   "i18n-ally.defaultNamespace": "translation",
   "i18n-ally.namespace": false,
   "i18n-ally.sourceLanguage": "en",
