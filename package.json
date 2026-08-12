@@ -26,7 +26,9 @@
     "db:migrate:deploy": "pnpm --filter api db:migrate:deploy",
     "db:seed": "pnpm --filter api db:seed",
     "db:studio": "pnpm --filter api db:studio",
+    "prisma:generate": "pnpm --filter api prisma:generate",
     "clean:reset": "pnpm ports:free && pnpm infra:down && docker compose -f docker/docker-compose.dev.yml down -v && pnpm infra:up && pnpm db:push && pnpm db:seed",
+    "postinstall": "pnpm prisma:generate",
     "prepare": "husky"
   },
   "devDependencies": {
