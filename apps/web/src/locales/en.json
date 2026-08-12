@@ -98,6 +98,7 @@
   "tour": {
     "step": "Step",
     "of": "of",
+    "close": "Close tour",
     "skip": "Skip",
     "back": "Back",
     "next": "Next",

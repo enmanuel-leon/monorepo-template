@@ -78,7 +78,12 @@ export function GuidedTour({ isOpen, onClose, steps }: Readonly<GuidedTourProps>
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Light Dimmed Overlay Without Heavy Blur */}
-      <div className="absolute inset-0 bg-black/40 transition-opacity" onClick={onClose} />
+      <button
+        type="button"
+        aria-label={t('tour.close')}
+        className="absolute inset-0 border-0 bg-black/40 p-0 transition-opacity"
+        onClick={onClose}
+      />
 
       {/* Target Spotlight Highlight Box */}
       {targetRect && (
@@ -111,7 +116,7 @@ export function GuidedTour({ isOpen, onClose, steps }: Readonly<GuidedTourProps>
                 type="button"
                 onClick={onClose}
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
-                title="Close Tour"
+                title={t('tour.close')}
               >
                 <X className="w-4 h-4" />
               </button>

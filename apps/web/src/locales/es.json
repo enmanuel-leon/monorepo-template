@@ -98,6 +98,7 @@
   "tour": {
     "step": "Paso del Tour",
     "of": "de",
+    "close": "Cerrar recorrido",
     "skip": "Omitir",
     "back": "Atrás",
     "next": "Siguiente",
