@@ -29,6 +29,14 @@ Welcome, AI Agent / Developer! Read this document carefully before modifying cod
     - **Production**: Inject via Kubernetes Secrets/ConfigMaps (`k8s/`). Never commit `.env` files to Git.
     - **Vite Client (`VITE_*`)**: Variables are compiled at build-time (`pnpm build`).
 11. **English Documentation Policy**: All comments, commit messages, JSDoc, and markdown documentation MUST be in English.
+12. **Git Authorization Policy**:
+    - Agents MUST NOT run `git add`, `git commit`, `git push`, `git tag`, `git merge`, `git rebase`, or branch deletion commands unless the user explicitly authorizes that exact operation.
+    - Commit authorization and push authorization are separate. Permission to commit does not imply permission to push.
+    - Agents MUST NOT amend commits, force-push, skip hooks, or change Git configuration unless explicitly requested.
+    - Before any authorized commit, inspect `git status`, `git diff`, `git diff --cached`, and `git log --oneline -10`.
+    - Stage only files belonging to the requested change. Never stage secrets, `.env` files, generated output, or unrelated user changes.
+    - Use English Conventional Commit messages and keep unrelated concerns in separate commits.
+    - After an authorized commit, report the commit hash and the exact files included. Do not push unless separately authorized.
 
 ---
 
@@ -57,3 +65,5 @@ pnpm cli
 Dependencies and vulnerabilities are managed centrally in `pnpm-workspace.yaml`.
 All security overrides (e.g. `nanoid`, `hono`, `fast-uri`, `brace-expansion`) are enforced at the root workspace level.
 Run `pnpm audit` to verify CVE status.
+
+See `CONTRIBUTING.md` for the complete collaboration, commit, review, and branch protection policy.

@@ -68,4 +68,10 @@ This repository is a production-ready fullstack monorepo template built with Nod
 
 - **Conventional Commits:** Use `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`.
 - **Strict Line Length (100-char max in body):** Wrap commit headers and every line in body to <= 100 characters.
-- **Mandatory User Approval Before Commit & Push:** AI Agents MUST NEVER execute `git commit` or `git push` without explicit user permission.
+- **Mandatory User Approval Before Git Operations:** AI Agents MUST NOT run `git add`, `git commit`, `git push`, `git tag`, `git merge`, `git rebase`, or branch deletion commands without explicit authorization for that exact operation.
+- Commit authorization does not authorize pushing. Never amend commits, force-push, skip hooks, or change Git configuration unless explicitly requested.
+- Before an authorized commit, inspect `git status`, `git diff`, `git diff --cached`, and `git log --oneline -10`.
+- Stage only intended files. Never stage secrets, `.env` files, generated output, or unrelated user changes.
+- Keep unrelated concerns in separate commits and report the commit hash and included files after committing.
+
+See `CONTRIBUTING.md` for the complete collaboration and repository protection policy.
