@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { authClient } from '../../lib/auth-client';
 import { queryClient } from '../../lib/query-client';
@@ -40,6 +41,7 @@ function findFirstTimezone(countries: CountryObj[], countryCode: string): Timezo
 
 export function useOnboardingPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const session = authClient.useSession();
   const { locale, setLocale } = useLocaleStore();
   const [step, setStep] = useState<number>(1);
@@ -48,6 +50,7 @@ export function useOnboardingPage() {
   const [selectedTimezone, setSelectedTimezone] = useState<TimezoneObj | null>(null);
   const [orgName, setOrgName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   useEffect(() => {
@@ -108,6 +111,7 @@ export function useOnboardingPage() {
 
   async function handleConfirmLaunch() {
     setLoading(true);
+    setError(null);
 
     let tzId: string | undefined = undefined;
     if (selectedTimezone) {
@@ -115,7 +119,7 @@ export function useOnboardingPage() {
     }
 
     try {
-      await fetch('/api/v1/me', {
+      const profileResponse = await fetch('/api/v1/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -124,6 +128,9 @@ export function useOnboardingPage() {
           timezoneId: tzId,
         }),
       });
+      if (!profileResponse.ok) {
+        throw new Error(t('onboarding.launchError'));
+      }
 
       if (orgName.trim().length > 0) {
         const slug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -132,20 +139,44 @@ export function useOnboardingPage() {
           slug,
         });
 
-        if (res?.data) {
-          await authClient.organization.setActive({
-            organizationId: res.data.id,
-          });
+        if (res.error || !res.data) {
+          throw new Error(t('onboarding.organizationCreateError'));
+        }
+
+        const activeOrganization = await authClient.organization.setActive({
+          organizationId: res.data.id,
+        });
+        if (activeOrganization.error) {
+          throw new Error(t('onboarding.organizationActivateError'));
+        }
+
+        const organizations = await authClient.organization.list();
+        if (
+          organizations.error ||
+          !organizations.data?.some((organization) => organization.id === res.data.id)
+        ) {
+          throw new Error(t('onboarding.organizationRefreshError'));
         }
       }
 
-      await authClient.getSession({ query: { disableCookieCache: true } });
+      const sessionResponse = await authClient.getSession({
+        query: { disableCookieCache: true },
+      });
+      if (sessionResponse.error) {
+        throw new Error(t('onboarding.launchError'));
+      }
       await queryClient.invalidateQueries();
       setLoading(false);
       setIsConfirmModalOpen(false);
-      navigate('/', { replace: true });
-    } catch {
+      // Reload the protected tree so Better Auth hooks read the newly active organization.
+      window.location.replace('/');
+    } catch (launchError) {
       setLoading(false);
+      if (launchError instanceof Error) {
+        setError(launchError.message);
+      } else {
+        setError(t('onboarding.launchError'));
+      }
     }
   }
 
@@ -164,6 +195,7 @@ export function useOnboardingPage() {
     orgName,
     setOrgName,
     loading,
+    error,
     isConfirmModalOpen,
     setIsConfirmModalOpen,
     locale,

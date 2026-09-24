@@ -4,14 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { useAppLayout } from './use-app-layout';
 import { OrgSwitcher } from '../../components/ui/org-switcher';
 import { GuidedTour, type TourStep } from '../../components/ui/guided-tour';
-import { useCopyToClipboard } from '../../hooks/use-copy-to-clipboard';
 import { Home, Settings, Package, LogOut, Sun, Moon, Globe, Sparkles, Layers } from 'lucide-react';
 
 export function AppLayout() {
   const { t } = useTranslation();
   const location = useLocation();
   const [isTourOpen, setIsTourOpen] = useState(false);
-  const { copyToClipboard } = useCopyToClipboard();
 
   const {
     user,
@@ -156,24 +154,6 @@ export function AppLayout() {
             <div className="w-7 h-7 rounded-lg bg-linear-to-br from-[#7B6CF6] to-[#4FB0FF] flex md:hidden items-center justify-center font-bold text-white text-xs mr-1">
               <Layers className="w-3.5 h-3.5 text-white" />
             </div>
-            {organization && (
-              <button
-                type="button"
-                onClick={() =>
-                  copyToClipboard(organization.id, `Copied Org ID: ${organization.id}`)
-                }
-                title="Click to copy Organization ID"
-                className="flex flex-col items-start bg-slate-100 border border-slate-200 dark:bg-[#131519] dark:border-white/10 rounded-xl px-3 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-[#7B6CF6]/50 transition-colors text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#7B6CF6]" />
-                  <span>{organization.name}</span>
-                </div>
-                <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 pl-4 truncate max-w-[180px]">
-                  {organization.id}
-                </span>
-              </button>
-            )}
           </div>
 
           <div className="flex items-center gap-2.5" data-tour="header-controls">

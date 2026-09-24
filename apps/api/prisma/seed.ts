@@ -1,26 +1,4 @@
-import { auth } from '../src/lib/auth.js';
 import { prisma } from '../src/lib/prisma.js';
-import { SEED_DEFAULTS } from '../src/constants/seed.constants.js';
-import { seedAdminEmailSchema, seedAdminPasswordSchema } from '../src/schemas/seed.schema.js';
-
-function getSeedAdminEmail(): string {
-  const configuredEmail = process.env.SEED_ADMIN_EMAIL || SEED_DEFAULTS.ADMIN_EMAIL;
-  const result = seedAdminEmailSchema.safeParse(configuredEmail);
-  if (!result.success) {
-    throw new Error('SEED_ADMIN_EMAIL must contain a valid email address.');
-  }
-  return result.data;
-}
-
-function getSeedAdminPassword(): string {
-  const result = seedAdminPasswordSchema.safeParse(process.env.SEED_ADMIN_PASSWORD);
-  if (!result.success) {
-    throw new Error(
-      'SEED_ADMIN_PASSWORD is required when creating the admin. Run the interactive CLI or set the variable.',
-    );
-  }
-  return result.data;
-}
 
 interface CountrySeed {
   code: string;
@@ -179,68 +157,9 @@ async function seedReferenceData() {
 }
 
 async function main() {
-  console.log('Seeding initial data...');
+  console.log('Seeding reference data...');
   await seedReferenceData();
-
-  const defaultMxTz = await prisma.timezone.findUnique({
-    where: { ianaName: 'America/Mexico_City' },
-  });
-
-  const seedAdminEmail = getSeedAdminEmail();
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: seedAdminEmail },
-  });
-
-  if (!existingAdmin) {
-    const seedAdminPassword = getSeedAdminPassword();
-    const res = await auth.api.signUpEmail({
-      body: {
-        email: seedAdminEmail,
-        password: seedAdminPassword,
-        name: 'Admin User',
-      },
-    });
-
-    if (res?.user) {
-      const adminId = res.user.id;
-
-      await prisma.user.update({
-        where: { id: adminId },
-        data: {
-          emailVerified: true,
-          role: 'admin',
-          countryCode: 'MX',
-          timezoneId: defaultMxTz?.id,
-        },
-      });
-
-      const defaultOrg = await prisma.organization.create({
-        data: {
-          name: 'Default Organization',
-          slug: 'default-org',
-          members: {
-            create: {
-              userId: adminId,
-              role: 'owner',
-            },
-          },
-        },
-      });
-
-      await prisma.item.create({
-        data: {
-          title: 'Welcome Sample Item',
-          description: 'This is a sample item created by the seed script.',
-          userId: adminId,
-          organizationId: defaultOrg.id,
-        },
-      });
-    }
-
-    console.log(`Seed completed successfully. Admin created: ${seedAdminEmail}`);
-  } else {
-    console.log('Admin user already exists.');
-  }
+  console.log('Reference data seed completed successfully.');
 }
 
 try {

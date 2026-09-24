@@ -1,5 +1,10 @@
 import { intro, outro, select, isCancel, log } from '@clack/prompts';
-import { runDbDiagnostics, runDbPushAndSeed, runDbForceResetAndSeed } from './db.cli.js';
+import {
+  runDbDiagnostics,
+  runDbPushAndSeed,
+  runDbForceResetAndSeed,
+  runCreateAdmin,
+} from './db.cli.js';
 import { runRedisDiagnostics, runRedisFlush } from './redis.cli.js';
 import { runInfraUp, runInfraDown, runInfraStatus, runSmtpTest } from './infra.cli.js';
 import { runQualityCheck, runKnipCheck } from './quality.cli.js';
@@ -14,6 +19,7 @@ async function handleDbMenu(): Promise<void> {
         value: 'db-force-reset',
         label: '🔥  Full Database Wipe & Reset (prisma db push --force-reset + seed)',
       },
+      { value: 'db-create-admin', label: '👤  Create Administrator User' },
       { value: 'back', label: '⬅️   Back to Main Menu' },
     ],
   });
@@ -28,6 +34,8 @@ async function handleDbMenu(): Promise<void> {
     await runDbPushAndSeed();
   } else if (choice === 'db-force-reset') {
     await runDbForceResetAndSeed();
+  } else if (choice === 'db-create-admin') {
+    await runCreateAdmin();
   }
 }
 

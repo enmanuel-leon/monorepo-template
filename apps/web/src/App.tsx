@@ -12,6 +12,7 @@ import { SettingsPage } from './pages/settings';
 import { ItemsPage } from './pages/items';
 import { authClient } from './lib/auth-client';
 import './lib/i18n';
+import { Toaster } from 'sonner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -88,6 +89,7 @@ function ProtectedRoute({ children, allowNoOrg = false }: Readonly<ProtectedRout
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <Toaster position="top-right" richColors closeButton duration={4000} />
       <BrowserRouter>
         <Routes>
           {/* Public Auth Routes */}

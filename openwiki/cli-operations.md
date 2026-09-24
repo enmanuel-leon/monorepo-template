@@ -11,8 +11,9 @@ pnpm cli
 ## 🗄️ Database Operations (PostgreSQL)
 
 - **Connection Diagnostics**: Verifies PostgreSQL connection, database name, table count, and latency.
-- **Schema Sync & Seed (`pnpm db:push`)**: Applies Prisma schema migrations non-destructively and runs initial seeders.
-- **Full Database Reset (`pnpm db:reset`)**: Wipe local database, recreate schema, and re-seed default admin user, timezones, and country data.
+- **Schema Sync & Seed (`pnpm db:push`)**: Applies Prisma schema changes non-destructively and seeds countries and timezones. It does not create users or organizations.
+- **Create Administrator User**: Prompts for validated administrator credentials and creates the admin user, default organization, and welcome item independently from the reference seed.
+- **Full Database Reset (`pnpm db:reset`)**: Wipes the local database, recreates the schema, and seeds only reference data. Administrator creation remains a separate operation.
 
 ---
 

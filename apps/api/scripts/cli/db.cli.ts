@@ -125,19 +125,14 @@ export async function runDbPushAndSeed(): Promise<void> {
 
   s.stop('Schema synced successfully!');
 
-  const credentials = await promptSeedCredentials();
-  if (!credentials) {
-    return;
-  }
-
-  s.start('Seeding database with default admin user, countries, and timezones...');
+  s.start('Seeding countries and timezones...');
   const seed = spawnSync(
     SYSTEM_COMMANDS.NODE,
     [SYSTEM_COMMANDS.PNPM_SCRIPT, 'exec', 'tsx', 'prisma/seed.ts'],
     {
       stdio: 'pipe',
       encoding: 'utf-8',
-      env: buildSeedEnvironment(credentials),
+      env: getSafeCommandEnvironment(),
     },
   );
 
@@ -191,19 +186,14 @@ export async function runDbForceResetAndSeed(): Promise<void> {
 
   s.stop('Database wiped and schema recreated successfully!');
 
-  const credentials = await promptSeedCredentials();
-  if (!credentials) {
-    return;
-  }
-
-  s.start('Seeding database with default admin user, countries, timezones, and demo data...');
+  s.start('Seeding countries and timezones...');
   const seed = spawnSync(
     SYSTEM_COMMANDS.NODE,
     [SYSTEM_COMMANDS.PNPM_SCRIPT, 'exec', 'tsx', 'prisma/seed.ts'],
     {
       stdio: 'pipe',
       encoding: 'utf-8',
-      env: buildSeedEnvironment(credentials),
+      env: getSafeCommandEnvironment(),
     },
   );
 
@@ -214,4 +204,32 @@ export async function runDbForceResetAndSeed(): Promise<void> {
   }
 
   s.stop('Database reset and seed completed successfully!');
+}
+
+export async function runCreateAdmin(): Promise<void> {
+  const credentials = await promptSeedCredentials();
+  if (!credentials) {
+    return;
+  }
+
+  const s = spinner();
+  s.start('Creating administrator user...');
+
+  const seed = spawnSync(
+    SYSTEM_COMMANDS.NODE,
+    [SYSTEM_COMMANDS.PNPM_SCRIPT, 'exec', 'tsx', 'prisma/seed-admin.ts'],
+    {
+      stdio: 'pipe',
+      encoding: 'utf-8',
+      env: buildSeedEnvironment(credentials),
+    },
+  );
+
+  if (seed.status !== 0) {
+    s.stop('Administrator creation failed!');
+    log.error(seed.stderr || seed.stdout || 'Unknown administrator creation error');
+    return;
+  }
+
+  s.stop('Administrator created successfully!');
 }

@@ -31,6 +31,7 @@ export function OnboardingPage() {
     orgName,
     setOrgName,
     loading,
+    error,
     isConfirmModalOpen,
     setIsConfirmModalOpen,
     locale,
@@ -277,6 +278,7 @@ export function OnboardingPage() {
         title={t('onboarding.confirmLaunchTitle')}
       >
         <div className="space-y-4">
+          {error && <div className="rounded-md bg-red-50 p-3 text-xs text-red-600">{error}</div>}
           <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#7B6CF6]/10 border border-[#7B6CF6]/30 text-xs text-slate-200">
             <Rocket className="w-5 h-5 text-[#7B6CF6] flex-none" />
             <span>{t('onboarding.confirmLaunchDesc')}</span>

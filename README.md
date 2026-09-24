@@ -55,15 +55,15 @@ toolchain are loaded automatically. Reload the VS Code window after changing she
 # Start Postgres, Redis, and MinIO in Docker
 pnpm infra:up
 
-# Push database schema & run initial seed
+# Push database schema & seed reference data
 pnpm db:push
 pnpm db:seed
 ```
 
-The seed administrator email and password are optional environment variables. If they are unset,
-the interactive CLI prompts for both values when a new administrator must be created. For
-non-interactive runs, set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` explicitly. The password must
-contain between 8 and 128 characters and is never stored in the seed source code.
+The reference seed does not create users or organizations. To create an administrator separately,
+use the `Create Administrator User` option in `pnpm cli`, or run `pnpm db:seed:admin` with
+`SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` set. The password must contain between 8 and 128
+characters and is never stored in the seed source code.
 
 ### 4. Interactive Developer & SRE Console (`pnpm cli`)
 
@@ -129,7 +129,7 @@ The repository includes `.vscode/tasks.json` preconfigured with 8 one-click task
 - `Dev: All (BE + FE)` — Run both apps in parallel with Turborepo.
 - `Dev: API (Backend)` — Fastify API with hot reload (`tsx watch`).
 - `Dev: Web (Frontend)` — React SPA with Vite.
-- `DB: Push & Seed` — Apply Prisma schema changes & seed default admin user.
+- `DB: Push & Seed` — Apply Prisma schema changes & seed reference data.
 - `Dev: Clean & Reset Local` — Wipes local docker volumes, rebuilds DB, and re-seeds cleanly.
 - `Quality: Check All` — Run format checks, linters, typechecks, and test suite.
 
