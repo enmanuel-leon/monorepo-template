@@ -26,9 +26,8 @@ async function ensureTestDatabase(): Promise<void> {
 function pushSchema(): void {
   console.log('Pushing Prisma schema to test database...');
   const result = spawnSync(
-    SYSTEM_COMMANDS.NODE,
+    SYSTEM_COMMANDS.PNPM,
     [
-      SYSTEM_COMMANDS.PNPM_SCRIPT,
       'exec',
       'prisma',
       'db',
@@ -47,7 +46,12 @@ function pushSchema(): void {
   );
 
   if (result.status !== 0) {
-    const errorOutput = result.stderr || result.stdout || 'Unknown error while pushing schema';
+    let errorOutput = 'Unknown error while pushing schema';
+    if (result.stderr) {
+      errorOutput = result.stderr;
+    } else if (result.stdout) {
+      errorOutput = result.stdout;
+    }
     throw new Error(`Failed to push Prisma schema: ${errorOutput}`);
   }
 

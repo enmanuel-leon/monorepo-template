@@ -6,7 +6,7 @@ export async function runQualityCheck(): Promise<void> {
   const s = spinner();
   s.start('Running workspace quality checks (format, oxlint, typecheck, vitest)...');
 
-  const res = spawnSync(SYSTEM_COMMANDS.NODE, [SYSTEM_COMMANDS.PNPM_SCRIPT, 'check'], {
+  const res = spawnSync(SYSTEM_COMMANDS.PNPM, ['check'], {
     stdio: 'pipe',
     encoding: 'utf-8',
     cwd: '../../',
@@ -26,7 +26,7 @@ export async function runKnipCheck(): Promise<void> {
   const s = spinner();
   s.start('Running Knip scanner for dead code and unlisted dependencies...');
 
-  const res = spawnSync(SYSTEM_COMMANDS.NODE, [SYSTEM_COMMANDS.PNPM_SCRIPT, 'knip'], {
+  const res = spawnSync(SYSTEM_COMMANDS.PNPM, ['knip'], {
     stdio: 'pipe',
     encoding: 'utf-8',
     cwd: '../../',

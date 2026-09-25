@@ -100,16 +100,8 @@ export async function runDbPushAndSeed(): Promise<void> {
   s.start('Syncing Prisma schema (non-destructive)...');
 
   const push = spawnSync(
-    SYSTEM_COMMANDS.NODE,
-    [
-      SYSTEM_COMMANDS.PNPM_SCRIPT,
-      'exec',
-      'prisma',
-      'db',
-      'push',
-      '--schema',
-      'prisma/schema.prisma',
-    ],
+    SYSTEM_COMMANDS.PNPM,
+    ['exec', 'prisma', 'db', 'push', '--schema', 'prisma/schema.prisma'],
     {
       stdio: 'pipe',
       encoding: 'utf-8',
@@ -126,15 +118,11 @@ export async function runDbPushAndSeed(): Promise<void> {
   s.stop('Schema synced successfully!');
 
   s.start('Seeding countries and timezones...');
-  const seed = spawnSync(
-    SYSTEM_COMMANDS.NODE,
-    [SYSTEM_COMMANDS.PNPM_SCRIPT, 'exec', 'tsx', 'prisma/seed.ts'],
-    {
-      stdio: 'pipe',
-      encoding: 'utf-8',
-      env: getSafeCommandEnvironment(),
-    },
-  );
+  const seed = spawnSync(SYSTEM_COMMANDS.PNPM, ['exec', 'tsx', 'prisma/seed.ts'], {
+    stdio: 'pipe',
+    encoding: 'utf-8',
+    env: getSafeCommandEnvironment(),
+  });
 
   if (seed.status !== 0) {
     s.stop('Database seed failed!');
@@ -160,17 +148,8 @@ export async function runDbForceResetAndSeed(): Promise<void> {
   s.start('Wiping database and executing force reset (prisma db push --force-reset)...');
 
   const push = spawnSync(
-    SYSTEM_COMMANDS.NODE,
-    [
-      SYSTEM_COMMANDS.PNPM_SCRIPT,
-      'exec',
-      'prisma',
-      'db',
-      'push',
-      '--force-reset',
-      '--schema',
-      'prisma/schema.prisma',
-    ],
+    SYSTEM_COMMANDS.PNPM,
+    ['exec', 'prisma', 'db', 'push', '--force-reset', '--schema', 'prisma/schema.prisma'],
     {
       stdio: 'pipe',
       encoding: 'utf-8',
@@ -187,15 +166,11 @@ export async function runDbForceResetAndSeed(): Promise<void> {
   s.stop('Database wiped and schema recreated successfully!');
 
   s.start('Seeding countries and timezones...');
-  const seed = spawnSync(
-    SYSTEM_COMMANDS.NODE,
-    [SYSTEM_COMMANDS.PNPM_SCRIPT, 'exec', 'tsx', 'prisma/seed.ts'],
-    {
-      stdio: 'pipe',
-      encoding: 'utf-8',
-      env: getSafeCommandEnvironment(),
-    },
-  );
+  const seed = spawnSync(SYSTEM_COMMANDS.PNPM, ['exec', 'tsx', 'prisma/seed.ts'], {
+    stdio: 'pipe',
+    encoding: 'utf-8',
+    env: getSafeCommandEnvironment(),
+  });
 
   if (seed.status !== 0) {
     s.stop('Database seed failed!');
@@ -215,15 +190,11 @@ export async function runCreateAdmin(): Promise<void> {
   const s = spinner();
   s.start('Creating administrator user...');
 
-  const seed = spawnSync(
-    SYSTEM_COMMANDS.NODE,
-    [SYSTEM_COMMANDS.PNPM_SCRIPT, 'exec', 'tsx', 'prisma/seed-admin.ts'],
-    {
-      stdio: 'pipe',
-      encoding: 'utf-8',
-      env: buildSeedEnvironment(credentials),
-    },
-  );
+  const seed = spawnSync(SYSTEM_COMMANDS.PNPM, ['exec', 'tsx', 'prisma/seed-admin.ts'], {
+    stdio: 'pipe',
+    encoding: 'utf-8',
+    env: buildSeedEnvironment(credentials),
+  });
 
   if (seed.status !== 0) {
     s.stop('Administrator creation failed!');
