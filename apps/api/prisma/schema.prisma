@@ -74,6 +74,7 @@ model UserSession {
   userAgent            String?  @map("user_agent")
   userId               String   @map("user_id") @db.Uuid
   activeOrganizationId String?  @map("active_organization_id")
+  impersonatedBy       String?  @map("impersonated_by")
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -129,12 +130,17 @@ model Passkey {
   name         String?
   publicKey    String    @map("public_key")
   userId       String    @map("user_id") @db.Uuid
-  credentialId String    @map("credential_id")
+  credentialID String    @map("credential_id")
+  counter      Int       @default(0)
+  deviceType   String    @default("") @map("device_type")
+  backedUp     Boolean   @default(false) @map("backed_up")
   transports   String?
   createdAt    DateTime? @default(now()) @map("created_at")
+  aaguid       String?
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([credentialID])
   @@map("passkey")
 }
 
@@ -181,6 +187,7 @@ model Invitation {
   user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
+  @@index([email])
   @@map("invitation")
 }
 
