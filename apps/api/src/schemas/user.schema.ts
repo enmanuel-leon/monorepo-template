@@ -13,6 +13,10 @@ export const userSchema = {
             image: { type: 'string', nullable: true },
             countryCode: { type: 'string', nullable: true },
             timezoneId: { type: 'string', nullable: true },
+            locale: { type: 'string', nullable: true },
+            theme: { type: 'string', nullable: true },
+            hasSeenTour: { type: 'boolean' },
+            hasCompletedOnboarding: { type: 'boolean' },
             country: {
               type: 'object',
               nullable: true,
@@ -32,6 +36,26 @@ export const userSchema = {
                 displayName: { type: 'string' },
                 gmtOffset: { type: 'string' },
                 countryCode: { type: 'string' },
+              },
+            },
+            members: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  organizationId: { type: 'string' },
+                  role: { type: 'string' },
+                  organization: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      name: { type: 'string' },
+                      slug: { type: 'string', nullable: true },
+                      logo: { type: 'string', nullable: true },
+                    },
+                  },
+                },
               },
             },
           },

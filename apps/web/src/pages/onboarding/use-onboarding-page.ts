@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { authClient } from '../../lib/auth-client';
 import { queryClient } from '../../lib/query-client';
 import { useLocaleStore } from '../../stores/locale.store';
+import { apiFetch } from '../../lib/api-client';
 
 export interface TimezoneObj {
   id: string;
@@ -53,20 +54,24 @@ export function useOnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
+  const userOrgs = authClient.useListOrganizations();
+
   useEffect(() => {
     if (!session.isPending && !session.data?.user) {
       navigate('/login', { replace: true });
     }
   }, [session.data?.user, session.isPending, navigate]);
 
+  useEffect(() => {
+    if (!userOrgs.isPending && userOrgs.data && userOrgs.data.length > 0) {
+      navigate('/', { replace: true });
+    }
+  }, [userOrgs.data, userOrgs.isPending, navigate]);
+
   const countriesQuery = useQuery<CountryObj[]>({
     queryKey: ['reference-countries-full'],
     queryFn: async () => {
-      const res = await fetch('/api/v1/reference/countries');
-      if (!res.ok) {
-        return [];
-      }
-      const data = await res.json();
+      const data = await apiFetch<{ countries: CountryObj[] }>('/api/v1/reference/countries');
       return data.countries;
     },
     staleTime: 24 * 60 * 60 * 1000,
@@ -119,18 +124,17 @@ export function useOnboardingPage() {
     }
 
     try {
-      const profileResponse = await fetch('/api/v1/me', {
+      await apiFetch('/api/v1/me', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: displayName,
           countryCode,
           timezoneId: tzId,
+          locale,
+          theme: (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) || 'dark',
+          hasCompletedOnboarding: true,
         }),
       });
-      if (!profileResponse.ok) {
-        throw new Error(t('onboarding.launchError'));
-      }
 
       if (orgName.trim().length > 0) {
         const slug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');

@@ -1,26 +1,34 @@
-import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppLayout } from './use-app-layout';
 import { OrgSwitcher } from '../../components/ui/org-switcher';
 import { GuidedTour, type TourStep } from '../../components/ui/guided-tour';
+import { NotificationBell } from '../../components/ui/notification-bell';
+import { InvitationModal } from '../../components/ui/invitation-modal';
 import { Home, Settings, Package, LogOut, Sun, Moon, Globe, Sparkles, Layers } from 'lucide-react';
 
 export function AppLayout() {
   const { t } = useTranslation();
   const location = useLocation();
-  const [isTourOpen, setIsTourOpen] = useState(false);
-
   const {
     user,
     organization,
     organizations,
+    isOwnerOfAnyOrg,
     locale,
     theme,
+    isTourOpen,
+    handleCloseTour,
+    handleStartTour,
+    selectedInvitation,
+    openInvitationModal,
+    closeInvitationModal,
+    handleInvitationAccepted,
+    handleInvitationDeclined,
     handleSignOut,
     handleSelectOrg,
     handleLanguageToggle,
-    toggleTheme,
+    handleThemeToggle,
   } = useAppLayout();
 
   let themeIcon = <Moon className="h-4 w-4" />;
@@ -98,12 +106,13 @@ export function AppLayout() {
             <OrgSwitcher
               currentOrg={organization}
               organizations={organizations}
+              canCreateOrg={!isOwnerOfAnyOrg}
               onSelectOrg={handleSelectOrg}
             />
           </div>
 
           <div className="text-[10.5px] font-semibold tracking-wider uppercase text-slate-400 dark:text-slate-500 px-2 mb-2">
-            Navigation
+            {t('common.navigation')}
           </div>
 
           <nav className="space-y-1">
@@ -157,9 +166,11 @@ export function AppLayout() {
           </div>
 
           <div className="flex items-center gap-2.5" data-tour="header-controls">
+            <NotificationBell onOpenInvitation={openInvitationModal} />
+
             <button
               type="button"
-              onClick={() => setIsTourOpen(true)}
+              onClick={handleStartTour}
               className="flex items-center gap-1.5 rounded-lg border border-[#7B6CF6]/40 bg-[#7B6CF6]/10 px-2.5 py-1.5 text-xs font-semibold text-[#7B6CF6] hover:bg-[#7B6CF6]/20 transition-colors"
             >
               <Sparkles className="h-3.5 w-3.5" />
@@ -177,7 +188,7 @@ export function AppLayout() {
 
             <button
               type="button"
-              onClick={toggleTheme}
+              onClick={handleThemeToggle}
               className="rounded-lg border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 p-1.5 text-slate-700 dark:text-slate-300 transition-colors"
             >
               {themeIcon}
@@ -215,7 +226,16 @@ export function AppLayout() {
       </nav>
 
       {/* Interactive Guided Tour Modal */}
-      <GuidedTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} steps={tourSteps} />
+      <GuidedTour isOpen={isTourOpen} onClose={handleCloseTour} steps={tourSteps} />
+
+      {/* Organization Invitation Details & Switch Modal */}
+      <InvitationModal
+        isOpen={Boolean(selectedInvitation)}
+        invitation={selectedInvitation}
+        onClose={closeInvitationModal}
+        onAccepted={handleInvitationAccepted}
+        onDeclined={handleInvitationDeclined}
+      />
     </div>
   );
 }

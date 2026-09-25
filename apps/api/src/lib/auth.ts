@@ -24,7 +24,42 @@ function buildPlugins(): BetterAuthPlugin[] {
 
   return [
     organization({
-      allowUserToCreateOrganization: true,
+      allowUserToCreateOrganization: async (user) => {
+        const existingOwnerMembership = await prisma.member.findFirst({
+          where: {
+            userId: user.id,
+            role: 'owner',
+          },
+        });
+        if (existingOwnerMembership) {
+          return false;
+        }
+        return true;
+      },
+      sendInvitationEmail: async (data) => {
+        logger.info(
+          { email: data.email, orgName: data.organization.name, role: data.role },
+          'Sending organization invitation email...',
+        );
+        const uniqueRef = Date.now().toString();
+        const subject = `Invitación para unirte a ${data.organization.name}`;
+        const html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; background-color: #0f1117; border: 1px solid #1e2330; border-radius: 16px; padding: 32px; color: #f8fafc; text-align: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);">
+          <h2 style="color: #ffffff; font-size: 20px; font-weight: 700; margin: 0 0 16px;">Has sido invitado a colaborar</h2>
+          <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
+            Has recibido una invitación para unirte a la organización <strong>${data.organization.name}</strong> con el rol de <strong>${data.role}</strong>.
+          </p>
+          <div style="margin: 24px 0;">
+            <a href="${env.BETTER_AUTH_URL}/select-organization" style="background-color: #7B6CF6; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-block;">
+              Ver y Aceptar Invitación
+            </a>
+          </div>
+          <hr style="border: none; border-top: 1px solid #1e2330; margin: 24px 0 16px;" />
+          <p style="color: #64748b; font-size: 11px; margin: 0;">${APP_NAME} · Todos los derechos reservados.</p>
+          <div style="display: none; max-height: 0px; overflow: hidden; opacity: 0;">Ref: ${uniqueRef}</div>
+        </div>`;
+
+        await sendEmail(data.email, subject, html);
+      },
     }),
     passkey({
       rpName: APP_NAME,

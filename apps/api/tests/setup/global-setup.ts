@@ -3,8 +3,35 @@ import { Client } from 'pg';
 import { getSafeCommandEnvironment, SYSTEM_COMMANDS } from '../../src/config/command.js';
 
 const TEST_DB_NAME = 'app_template_test_db';
-const ADMIN_CONNECTION_STRING = 'postgresql://postgres:postgres@localhost:5432/postgres';
-const TEST_CONNECTION_STRING = `postgresql://postgres:postgres@localhost:5432/${TEST_DB_NAME}?schema=public`;
+
+function getTestUrls(): { adminUrl: string; testUrl: string } {
+  const currentDbUrl = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
+  if (currentDbUrl) {
+    try {
+      const parsedAdmin = new URL(currentDbUrl);
+      parsedAdmin.pathname = '/postgres';
+      parsedAdmin.search = '';
+
+      const parsedTest = new URL(currentDbUrl);
+      parsedTest.pathname = `/${TEST_DB_NAME}`;
+      parsedTest.search = '?schema=public';
+
+      return {
+        adminUrl: parsedAdmin.toString(),
+        testUrl: parsedTest.toString(),
+      };
+    } catch {
+      // Fallback
+    }
+  }
+
+  return {
+    adminUrl: 'postgresql://postgres:postgres@localhost:5432/postgres',
+    testUrl: `postgresql://postgres:postgres@localhost:5432/${TEST_DB_NAME}?schema=public`,
+  };
+}
+
+const { adminUrl: ADMIN_CONNECTION_STRING, testUrl: TEST_CONNECTION_STRING } = getTestUrls();
 
 async function ensureTestDatabase(): Promise<void> {
   const client = new Client({ connectionString: ADMIN_CONNECTION_STRING });
@@ -54,16 +81,15 @@ function pushSchema(): void {
     }
     throw new Error(`Failed to push Prisma schema: ${errorOutput}`);
   }
-
-  console.log('Schema pushed successfully.');
+  console.log('Test database schema pushed successfully.');
 }
 
 export async function setup(): Promise<void> {
-  process.env.NODE_ENV = 'test';
-  process.env.DATABASE_URL = TEST_CONNECTION_STRING;
-  process.env.BETTER_AUTH_SECRET = 'test-super-secret-key-32-chars-min-length';
-  process.env.BETTER_AUTH_URL = 'http://localhost:3000';
-
+  console.log('Setting up integration test environment...');
   await ensureTestDatabase();
   pushSchema();
+}
+
+export async function teardown(): Promise<void> {
+  console.log('Tearing down integration test environment...');
 }

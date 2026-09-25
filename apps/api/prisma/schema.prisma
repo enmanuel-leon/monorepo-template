@@ -15,8 +15,12 @@ model User {
   username         String?        @unique
   displayUsername  String?        @map("display_username")
   role             String?        @default("user")
-  countryCode      String?        @map("country_code") @db.VarChar(2)
-  timezoneId       String?        @map("timezone_id") @db.Uuid
+  countryCode            String?        @map("country_code") @db.VarChar(2)
+  timezoneId             String?        @map("timezone_id") @db.Uuid
+  locale                 String?        @default("es") @db.VarChar(5)
+  theme                  String?        @default("dark") @db.VarChar(10)
+  hasSeenTour            Boolean        @default(false) @map("has_seen_tour")
+  hasCompletedOnboarding Boolean        @default(false) @map("has_completed_onboarding")
   banned           Boolean?       @default(false)
   banReason        String?        @map("ban_reason")
   banExpires       DateTime?      @map("ban_expires")

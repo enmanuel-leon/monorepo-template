@@ -1,11 +1,23 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSettingsPage } from './use-settings-page';
+import { useSettingsPage, type OrgMemberItem, type OrgInvitationItem } from './use-settings-page';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { CustomCountrySelect } from '../../components/ui/custom-country-select';
-import { Lock, Plus, Building2, KeyRound, Pencil, Trash2, ShieldCheck } from 'lucide-react';
+import {
+  Lock,
+  Plus,
+  Building2,
+  KeyRound,
+  Pencil,
+  Trash2,
+  ShieldCheck,
+  ShieldAlert,
+  Loader2,
+  Users,
+  UserPlus,
+  Mail,
+} from 'lucide-react';
 
 interface OrgItem {
   id: string;
@@ -15,6 +27,7 @@ interface OrgItem {
 export function SettingsPage() {
   const { t } = useTranslation();
   const {
+    user,
     email,
     activeOrg,
     organizations,
@@ -40,20 +53,47 @@ export function SettingsPage() {
     editingPasskeyName,
     setEditingPasskeyName,
     isManagingPasskey,
+    isOwnerOfAnyOrg,
+    canManageMembers,
+    members,
+    isLoadingMembers,
+    sentInvitations,
+    isInviteModalOpen,
+    setIsInviteModalOpen,
+    inviteEmail,
+    setInviteEmail,
+    inviteRole,
+    setInviteRole,
+    isInviting,
+    handleInviteMember,
+    memberToRemove,
+    isRemovingMember,
+    openRemoveMemberModal,
+    closeRemoveMemberModal,
+    handleConfirmRemoveMember,
+    handleCancelInvitation,
+    passkeyToDeleteId,
+    openDeletePasskeyModal,
+    closeDeletePasskeyModal,
+    handleConfirmDeletePasskey,
     handleAddPasskey,
     handleUpdatePasskey,
-    handleDeletePasskey,
     handleSaveProfile,
+    activeTab,
+    setActiveTab,
     handleCreateOrganization,
     handleSelectOrg,
   } = useSettingsPage();
-
-  const [activeTab, setActiveTab] = useState<'profile' | 'organizations' | 'security'>('profile');
 
   let profileTabClass =
     'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-200';
   let organizationsTabClass =
     'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-200';
+  let timezoneDisplayName = 'UTC';
+  if (selectedTimezone) {
+    timezoneDisplayName = selectedTimezone.displayName;
+  }
+
   let securityTabClass =
     'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-200';
   if (activeTab === 'profile') {
@@ -135,7 +175,7 @@ export function SettingsPage() {
               <div className="relative flex items-center">
                 <input
                   id="settings-timezone"
-                  value={selectedTimezone ? selectedTimezone.displayName : 'UTC'}
+                  value={timezoneDisplayName}
                   readOnly
                   className="w-full bg-slate-100 dark:bg-[#131519]/70 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed pr-9"
                 />
@@ -170,14 +210,22 @@ export function SettingsPage() {
               </p>
             </div>
 
-            <Button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              className="bg-[#7B6CF6] text-white hover:bg-[#6a5bf0] text-xs gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t('settings.createOrg')}</span>
-            </Button>
+            {!isOwnerOfAnyOrg && (
+              <Button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="bg-[#7B6CF6] text-white hover:bg-[#6a5bf0] text-xs gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t('settings.createOrg')}</span>
+              </Button>
+            )}
+            {isOwnerOfAnyOrg && (
+              <div className="flex items-center gap-1.5 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg">
+                <ShieldAlert className="w-4 h-4 flex-none" />
+                <span>{t('selectOrg.ownerLimitNotice')}</span>
+              </div>
+            )}
           </div>
 
           {/* Organizations List */}
@@ -206,11 +254,12 @@ export function SettingsPage() {
                       </span>
                     </div>
 
-                    {isCurrent ? (
+                    {isCurrent && (
                       <span className="text-xs font-semibold text-[#7B6CF6] bg-[#7B6CF6]/10 border border-[#7B6CF6]/30 px-3 py-1 rounded-full">
                         {t('settings.active')}
                       </span>
-                    ) : (
+                    )}
+                    {!isCurrent && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -225,6 +274,181 @@ export function SettingsPage() {
               })}
             </div>
           </div>
+
+          {/* Active Organization Members & Invitations Section */}
+          {activeOrg && (
+            <div className="space-y-6 pt-6 border-t border-slate-200 dark:border-white/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#7B6CF6]" />
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                      {t('settings.membersTitle')} · {activeOrg.name}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {t('settings.membersDesc')}
+                  </p>
+                </div>
+
+                {canManageMembers && (
+                  <Button
+                    type="button"
+                    onClick={() => setIsInviteModalOpen(true)}
+                    className="bg-[#7B6CF6] text-white hover:bg-[#6a5bf0] text-xs gap-1.5"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>{t('settings.inviteMember')}</span>
+                  </Button>
+                )}
+              </div>
+
+              {/* Members List */}
+              <div className="space-y-2">
+                {isLoadingMembers && (
+                  <div className="p-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7B6CF6]" />
+                    <span>{t('common.loading')}</span>
+                  </div>
+                )}
+
+                {!isLoadingMembers && members.length === 0 && (
+                  <p className="text-xs text-slate-500 py-2">{t('settings.noMembers')}</p>
+                )}
+
+                {members.map((member: OrgMemberItem) => {
+                  let isOwnerRole = false;
+                  if (member.role === 'owner') {
+                    isOwnerRole = true;
+                  }
+
+                  let isSelf = false;
+                  if (user && member.user && member.user.id === (user as { id?: string }).id) {
+                    isSelf = true;
+                  }
+
+                  let canRemove = false;
+                  if (canManageMembers && !isOwnerRole && !isSelf) {
+                    canRemove = true;
+                  }
+
+                  const memberName = member.user?.name || member.user?.email || 'User';
+                  const memberInitial = memberName.charAt(0).toUpperCase();
+
+                  let roleLabel = t('settings.roleBadgeMember');
+                  let roleBadgeClass =
+                    'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400';
+                  if (isOwnerRole) {
+                    roleLabel = t('settings.roleBadgeOwner');
+                    roleBadgeClass = 'bg-[#7B6CF6]/10 text-[#7B6CF6] border border-[#7B6CF6]/30';
+                  } else if (member.role === 'admin') {
+                    roleLabel = t('settings.roleBadgeAdmin');
+                    roleBadgeClass = 'bg-blue-500/10 text-blue-500 border border-blue-500/30';
+                  }
+
+                  return (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-[#131519] p-3 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[#7B6CF6]/20 text-[#7B6CF6] flex items-center justify-center font-bold text-xs flex-none">
+                          {memberInitial}
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-slate-800 dark:text-slate-200 text-xs">
+                              {memberName}
+                            </span>
+                            {isSelf && (
+                              <span className="text-[10px] text-[#7B6CF6] font-medium bg-[#7B6CF6]/10 px-1.5 py-0.5 rounded-md">
+                                {t('settings.youBadge')}
+                              </span>
+                            )}
+                            <span
+                              className={`text-[9.5px] font-semibold uppercase px-2 py-0.5 rounded-full ${roleBadgeClass}`}
+                            >
+                              {roleLabel}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-400">{member.user?.email}</span>
+                        </div>
+                      </div>
+
+                      {canRemove && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openRemoveMemberModal(member)}
+                          className="text-red-500 hover:text-red-600 border-red-500/20 hover:bg-red-500/10 text-xs gap-1 px-2.5 py-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{t('common.delete')}</span>
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Sent Pending Invitations */}
+              {sentInvitations.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-white/5">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    <Mail className="w-3.5 h-3.5 text-[#7B6CF6]" />
+                    <span>
+                      {t('settings.pendingSentInvites')} ({sentInvitations.length})
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {sentInvitations.map((inv: OrgInvitationItem) => {
+                      let inviteRoleLabel = t('settings.roleBadgeMember');
+                      if (inv.role === 'admin') {
+                        inviteRoleLabel = t('settings.roleBadgeAdmin');
+                      } else if (inv.role === 'owner') {
+                        inviteRoleLabel = t('settings.roleBadgeOwner');
+                      }
+
+                      return (
+                        <div
+                          key={inv.id}
+                          className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-[#131519] p-3 text-xs"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center flex-none">
+                              <Mail className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap min-w-0">
+                              <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                                {inv.email}
+                              </span>
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                {inviteRoleLabel}
+                              </span>
+                            </div>
+                          </div>
+
+                          {canManageMembers && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCancelInvitation(inv.id)}
+                              className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                            >
+                              {t('settings.cancelInvite')}
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -340,7 +564,7 @@ export function SettingsPage() {
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDeletePasskey(passkey.id)}
+                        onClick={() => openDeletePasskeyModal(passkey.id)}
                         disabled={isManagingPasskey}
                         aria-label={t('settings.deletePasskey')}
                         className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
@@ -355,6 +579,126 @@ export function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Modal for Inviting Member */}
+      <Modal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        title={t('settings.inviteMemberTitle')}
+      >
+        <form onSubmit={handleInviteMember} className="space-y-4">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {t('settings.inviteMemberDesc')}
+          </p>
+
+          <Input
+            label={t('settings.inviteEmail')}
+            type="email"
+            placeholder="colleague@example.com"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            required
+            autoFocus
+          />
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
+              {t('settings.inviteRole')}
+            </label>
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as 'member' | 'admin')}
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 dark:border-white/10 dark:bg-[#131519] dark:text-slate-100"
+            >
+              <option value="member">{t('settings.memberRoleMember')}</option>
+              <option value="admin">{t('settings.memberRoleAdmin')}</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsInviteModalOpen(false)}
+              disabled={isInviting}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isInviting || !inviteEmail.trim()}
+              className="bg-[#7B6CF6] text-white hover:bg-[#6a5bf0]"
+            >
+              {isInviting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
+              {t('settings.sendInvite')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal for Removing Member */}
+      <Modal
+        isOpen={Boolean(memberToRemove)}
+        onClose={closeRemoveMemberModal}
+        title={t('settings.removeMember')}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {t('settings.removeMemberConfirm')}
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeRemoveMemberModal}
+              disabled={isRemovingMember}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmRemoveMember}
+              disabled={isRemovingMember}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {isRemovingMember && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
+              {t('common.delete')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal for Deleting Passkey */}
+      <Modal
+        isOpen={Boolean(passkeyToDeleteId)}
+        onClose={closeDeletePasskeyModal}
+        title={t('settings.deletePasskey')}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {t('settings.passkeyDeleteConfirm')}
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeDeletePasskeyModal}
+              disabled={isManagingPasskey}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmDeletePasskey}
+              disabled={isManagingPasskey}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {isManagingPasskey && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
+              {t('common.delete')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal for Creating New Organization */}
       <Modal

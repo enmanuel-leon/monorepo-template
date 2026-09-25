@@ -8,6 +8,7 @@ import { HomePage } from './pages/home';
 import { LoginPage } from './pages/login';
 import { RegisterPage } from './pages/register';
 import { OnboardingPage } from './pages/onboarding';
+import { SelectOrganizationPage } from './pages/select-organization';
 import { SettingsPage } from './pages/settings';
 import { ItemsPage } from './pages/items';
 import { authClient } from './lib/auth-client';
@@ -33,18 +34,14 @@ function ProtectedRoute({ children, allowNoOrg = false }: Readonly<ProtectedRout
       session.data &&
       !activeOrg.data &&
       userOrgs.data &&
-      userOrgs.data.length > 0 &&
+      userOrgs.data.length === 1 &&
       !isSettingActiveRef.current
     ) {
       isSettingActiveRef.current = true;
-      const firstOrg = userOrgs.data[0];
+      const soleOrg = userOrgs.data[0];
       authClient.organization
         .setActive({
-          organizationId: firstOrg.id,
-        })
-        .then(async () => {
-          await authClient.getSession({ query: { disableCookieCache: true } });
-          await queryClient.invalidateQueries();
+          organizationId: soleOrg.id,
         })
         .catch(() => {
           isSettingActiveRef.current = false;
@@ -71,15 +68,13 @@ function ProtectedRoute({ children, allowNoOrg = false }: Readonly<ProtectedRout
   }
 
   if (!allowNoOrg) {
-    let hasNoOrgs = false;
-    if (!activeOrg.data) {
-      if (!userOrgs.data || userOrgs.data.length === 0) {
-        hasNoOrgs = true;
-      }
+    const orgs = userOrgs.data || [];
+    if (orgs.length === 0) {
+      return <Navigate to="/onboarding" replace />;
     }
 
-    if (hasNoOrgs) {
-      return <Navigate to="/onboarding" replace />;
+    if (!activeOrg.data && orgs.length > 1) {
+      return <Navigate to="/select-organization" replace />;
     }
   }
 
@@ -105,6 +100,16 @@ export function App() {
               }
             />
           </Route>
+
+          {/* Standalone Authenticated Organization Selector Route */}
+          <Route
+            path="/select-organization"
+            element={
+              <ProtectedRoute allowNoOrg>
+                <SelectOrganizationPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected App Routes */}
           <Route

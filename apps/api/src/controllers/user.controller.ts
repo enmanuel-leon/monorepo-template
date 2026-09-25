@@ -1,6 +1,10 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { auth } from '../lib/auth.js';
-import { getUserProfileWithRelations, updateUserProfile } from '../services/user.service.js';
+import {
+  getUserProfileWithRelations,
+  updateUserProfile,
+  type UpdateUserProfileInput,
+} from '../services/user.service.js';
 
 export async function getCurrentUser(request: FastifyRequest, reply: FastifyReply) {
   const session = await auth.api.getSession({
@@ -13,13 +17,18 @@ export async function getCurrentUser(request: FastifyRequest, reply: FastifyRepl
 
   const fullUser = await getUserProfileWithRelations(session.user.id);
 
+  let userResult = session.user;
+  if (fullUser) {
+    userResult = fullUser;
+  }
+
   return reply.send({
-    user: fullUser || session.user,
+    user: userResult,
   });
 }
 
 export async function updateUser(
-  request: FastifyRequest<{ Body: { name?: string; countryCode?: string; timezoneId?: string } }>,
+  request: FastifyRequest<{ Body: UpdateUserProfileInput }>,
   reply: FastifyReply,
 ) {
   const session = await auth.api.getSession({
@@ -34,6 +43,10 @@ export async function updateUser(
     name: request.body.name,
     countryCode: request.body.countryCode,
     timezoneId: request.body.timezoneId,
+    locale: request.body.locale,
+    theme: request.body.theme,
+    hasSeenTour: request.body.hasSeenTour,
+    hasCompletedOnboarding: request.body.hasCompletedOnboarding,
   });
 
   return reply.send({

@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { THEMES, type Theme } from '../constants/theme.constants';
+import { getApiUrl } from '../lib/api-client';
 
 interface ThemeState {
   theme: Theme;
-  setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
+  setTheme: (theme: Theme, syncWithBackend?: boolean) => void;
+  toggleTheme: (syncWithBackend?: boolean) => void;
 }
 
 function applyTheme(theme: Theme) {
@@ -17,18 +18,42 @@ function applyTheme(theme: Theme) {
   }
 }
 
-const initialTheme =
-  (typeof localStorage !== 'undefined' && (localStorage.getItem('theme') as Theme)) || THEMES.DARK;
+function syncPreferenceToApi(patch: Record<string, unknown>): void {
+  try {
+    fetch(getApiUrl('/api/v1/me'), {
+      credentials: 'include',
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }).catch(() => {
+      // Ignore background sync errors when unauthenticated or offline
+    });
+  } catch {
+    // Ignore synchronous exceptions
+  }
+}
+
+let initialTheme: Theme = THEMES.DARK;
+if (typeof localStorage !== 'undefined') {
+  const storedTheme = localStorage.getItem('theme');
+  if (storedTheme === THEMES.LIGHT || storedTheme === THEMES.DARK) {
+    initialTheme = storedTheme;
+  }
+}
 applyTheme(initialTheme);
 
 export const useThemeStore = create<ThemeState>((set) => ({
   theme: initialTheme,
-  setTheme: (theme: Theme) => {
+  setTheme: (theme: Theme, syncWithBackend = false) => {
     localStorage.setItem('theme', theme);
     applyTheme(theme);
     set({ theme });
+
+    if (syncWithBackend) {
+      syncPreferenceToApi({ theme });
+    }
   },
-  toggleTheme: () => {
+  toggleTheme: (syncWithBackend = false) => {
     set((state) => {
       let nextTheme: Theme = THEMES.DARK;
       if (state.theme === THEMES.DARK) {
@@ -36,6 +61,11 @@ export const useThemeStore = create<ThemeState>((set) => ({
       }
       localStorage.setItem('theme', nextTheme);
       applyTheme(nextTheme);
+
+      if (syncWithBackend) {
+        syncPreferenceToApi({ theme: nextTheme });
+      }
+
       return { theme: nextTheme };
     });
   },

@@ -1,6 +1,7 @@
 import { useState, type SyntheticEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { apiFetch } from '../../lib/api-client';
 import { authClient } from '../../lib/auth-client';
 
 export interface Item {
@@ -30,32 +31,25 @@ export function useItemsPage() {
       if (activeOrgId) {
         url = `/api/v1/items?organizationId=${activeOrgId}`;
       }
-      const res = await fetch(url, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok) {
-        throw new Error('Failed to fetch items');
+      const data = await apiFetch<Item[]>(url);
+      if (Array.isArray(data)) {
+        return data;
       }
-      return res.json();
+      return [];
     },
     staleTime: 60 * 1000,
   });
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/v1/items', {
+      return apiFetch('/api/v1/items', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           description,
           organizationId: activeOrgId,
         }),
       });
-      if (!res.ok) {
-        throw new Error('Failed to create item');
-      }
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
@@ -71,13 +65,9 @@ export function useItemsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/v1/items/${id}`, {
+      return apiFetch(`/api/v1/items/${id}`, {
         method: 'DELETE',
       });
-      if (!res.ok) {
-        throw new Error('Failed to delete item');
-      }
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });

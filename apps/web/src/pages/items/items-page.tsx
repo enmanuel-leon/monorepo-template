@@ -26,7 +26,7 @@ export function ItemsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          {t('common.items')}
+          {t('items.title')}
         </h1>
 
         <div className="flex gap-2">
@@ -45,7 +45,7 @@ export function ItemsPage() {
             onClick={() => setIsModalOpen(true)}
           >
             <Plus className="mr-1.5 h-4 w-4" />
-            Add Item
+            {t('items.addItem')}
           </Button>
         </div>
       </div>
@@ -107,7 +107,11 @@ export function ItemsPage() {
       </div>
 
       {/* Modal for Creating Item */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create New Item">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={t('items.createModalTitle')}
+      >
         <form onSubmit={handleCreate} className="space-y-4">
           <Input
             label={t('common.title')}
