@@ -4,17 +4,6 @@
   "oxc.enable": true,
   "oxc.fmt.enable": true,
   "oxc.lint.enable": true,
-  "terminal.integrated.defaultProfile.linux": "bash",
-  "terminal.integrated.automationProfile.linux": {
-    "path": "/bin/bash",
-    "args": ["-lc"]
-  },
-  "terminal.integrated.profiles.linux": {
-    "bash": {
-      "path": "/bin/bash",
-      "args": ["-l"]
-    }
-  },
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "i18n-ally.localesPaths": ["apps/web/src/locales"],
