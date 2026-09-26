@@ -21,41 +21,38 @@ class LocalStorageMock {
   }
 }
 
-if (globalThis.localStorage === undefined) {
-  globalThis.localStorage = new LocalStorageMock() as unknown as Storage;
-}
+globalThis.localStorage ??= new LocalStorageMock() as unknown as Storage;
 
-if (globalThis.document === undefined) {
-  const classListSet = new Set<string>();
-  const mockDoc = {
-    head: {
+const classListSet = new Set<string>();
+const mockDoc = {
+  head: {
+    appendChild: () => {},
+    removeChild: () => {},
+  },
+  body: {
+    appendChild: () => {},
+    removeChild: () => {},
+  },
+  createTextNode: (text: string) => ({ textContent: text }),
+  createElement: () => ({
+    setAttribute: () => {},
+    textContent: '',
+    style: {},
+    appendChild: () => {},
+  }),
+  getElementsByTagName: () => [
+    {
       appendChild: () => {},
       removeChild: () => {},
     },
-    body: {
-      appendChild: () => {},
-      removeChild: () => {},
+  ],
+  documentElement: {
+    classList: {
+      add: (cls: string) => classListSet.add(cls),
+      remove: (cls: string) => classListSet.delete(cls),
+      contains: (cls: string) => classListSet.has(cls),
     },
-    createTextNode: (text: string) => ({ textContent: text }),
-    createElement: () => ({
-      setAttribute: () => {},
-      textContent: '',
-      style: {},
-      appendChild: () => {},
-    }),
-    getElementsByTagName: () => [
-      {
-        appendChild: () => {},
-        removeChild: () => {},
-      },
-    ],
-    documentElement: {
-      classList: {
-        add: (cls: string) => classListSet.add(cls),
-        remove: (cls: string) => classListSet.delete(cls),
-        contains: (cls: string) => classListSet.has(cls),
-      },
-    },
-  };
-  globalThis.document = mockDoc as unknown as Document;
-}
+  },
+};
+
+globalThis.document ??= mockDoc as unknown as Document;
