@@ -1,7 +1,10 @@
 import { spawnSync } from 'node:child_process';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Client } from 'pg';
 import { getSafeCommandEnvironment, SYSTEM_COMMANDS } from '../../src/config/command.js';
 
+const API_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const TEST_DB_NAME = 'app_template_test_db';
 
 function getTestUrls(): { adminUrl: string; testUrl: string } {
@@ -68,13 +71,16 @@ function pushSchema(): void {
     {
       stdio: 'pipe',
       encoding: 'utf-8',
+      cwd: API_ROOT,
       env: getSafeCommandEnvironment(),
     },
   );
 
   if (result.status !== 0) {
     let errorOutput = 'Unknown error while pushing schema';
-    if (result.stderr) {
+    if (result.error) {
+      errorOutput = result.error.message;
+    } else if (result.stderr) {
       errorOutput = result.stderr;
     } else if (result.stdout) {
       errorOutput = result.stdout;

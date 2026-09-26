@@ -195,7 +195,7 @@ export function useSettingsPage() {
       });
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['current-user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['current-user-profile'] });
       queryClient.invalidateQueries({ queryKey: ['session'] });
       toast.success(t('settings.profileSaved'));
     },

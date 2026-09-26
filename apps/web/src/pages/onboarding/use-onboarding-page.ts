@@ -23,7 +23,7 @@ export interface CountryObj {
   timezones: TimezoneObj[];
 }
 
-function detectCountryCode(countries: CountryObj[]): string | null {
+export function detectCountryCode(countries: CountryObj[]): string | null {
   try {
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const matchedCountry = countries.find((country) =>
@@ -35,7 +35,10 @@ function detectCountryCode(countries: CountryObj[]): string | null {
   }
 }
 
-function findFirstTimezone(countries: CountryObj[], countryCode: string): TimezoneObj | null {
+export function findFirstTimezone(
+  countries: CountryObj[],
+  countryCode: string,
+): TimezoneObj | null {
   const matchedCountry = countries.find((country) => country.code === countryCode) || countries[0];
   return matchedCountry?.timezones?.[0] || null;
 }

@@ -47,7 +47,9 @@ export const useLocaleStore = create<LocaleState>((set) => ({
       return;
     }
 
-    localStorage.setItem('locale', lang);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('locale', lang);
+    }
     i18n.changeLanguage(lang);
     set({ locale: lang });
 

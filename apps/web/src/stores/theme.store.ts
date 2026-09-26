@@ -45,7 +45,9 @@ applyTheme(initialTheme);
 export const useThemeStore = create<ThemeState>((set) => ({
   theme: initialTheme,
   setTheme: (theme: Theme, syncWithBackend = false) => {
-    localStorage.setItem('theme', theme);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('theme', theme);
+    }
     applyTheme(theme);
     set({ theme });
 
@@ -59,7 +61,9 @@ export const useThemeStore = create<ThemeState>((set) => ({
       if (state.theme === THEMES.DARK) {
         nextTheme = THEMES.LIGHT;
       }
-      localStorage.setItem('theme', nextTheme);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('theme', nextTheme);
+      }
       applyTheme(nextTheme);
 
       if (syncWithBackend) {

@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "lint": "oxlint --deny-warnings src",
     "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --check",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@better-auth/passkey": "catalog:",
@@ -44,6 +46,8 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@vitest/coverage-v8": "catalog:"
   }
 }

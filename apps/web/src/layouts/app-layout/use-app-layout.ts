@@ -90,7 +90,7 @@ export function useAppLayout() {
         method: 'PATCH',
         body: JSON.stringify({ hasSeenTour: true }),
       });
-      void queryClient.invalidateQueries({ queryKey: ['current-user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['current-user-profile'] });
     } catch {
       // Ignored
     }

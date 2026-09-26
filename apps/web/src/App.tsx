@@ -33,8 +33,7 @@ function ProtectedRoute({ children, allowNoOrg = false }: Readonly<ProtectedRout
       !isPending &&
       session.data &&
       !activeOrg.data &&
-      userOrgs.data &&
-      userOrgs.data.length === 1 &&
+      userOrgs.data?.length === 1 &&
       !isSettingActiveRef.current
     ) {
       isSettingActiveRef.current = true;

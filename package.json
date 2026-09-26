@@ -30,7 +30,9 @@
     "prisma:generate": "pnpm --filter api prisma:generate",
     "clean:reset": "pnpm ports:free && pnpm infra:down && docker compose -f docker/docker-compose.dev.yml down -v && pnpm infra:up && pnpm db:push && pnpm db:seed",
     "postinstall": "pnpm prisma:generate",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:coverage": "turbo test:coverage",
+    "sonar:scan": "sonar-scanner"
   },
   "devDependencies": {
     "@commitlint/cli": "catalog:",
