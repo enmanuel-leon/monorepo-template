@@ -28,6 +28,16 @@ describe('Organization API', () => {
     expect(response.statusCode).toBe(401);
   });
 
+  it('rejects unauthenticated POST request to /api/v1/organizations', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/organizations',
+      payload: { name: 'Unauthorized Corp' },
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+
   it('creates and lists organizations for authenticated user, and enforces owner limit', async () => {
     const email = `org-test-${Date.now()}@example.com`;
     const password = 'TestPassword123!';

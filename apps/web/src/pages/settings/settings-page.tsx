@@ -1,10 +1,24 @@
 import { useTranslation } from 'react-i18next';
-import { useSettingsPage, type OrgMemberItem, type OrgInvitationItem } from './use-settings-page';
+import {
+  useSettingsPage,
+  type OrgMemberItem,
+  type InvitationHistoryItem,
+  type InvitationStatusFilter,
+} from './use-settings-page';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { CustomCountrySelect } from '../../components/ui/custom-country-select';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from '../../components/ui/pagination';
 import {
   Lock,
   Plus,
@@ -19,11 +33,155 @@ import {
   Users,
   UserPlus,
   Mail,
+  RotateCw,
 } from 'lucide-react';
 
 interface OrgItem {
   id: string;
   name: string;
+}
+
+const statusFilters: Array<{
+  value: InvitationStatusFilter;
+  labelKey: string;
+}> = [
+  { value: 'all', labelKey: 'settings.filterAll' },
+  { value: 'pending', labelKey: 'settings.filterPending' },
+  { value: 'accepted', labelKey: 'settings.filterAccepted' },
+  { value: 'rejected', labelKey: 'settings.filterRejected' },
+  { value: 'canceled', labelKey: 'settings.filterCanceled' },
+];
+
+type PageItem = number | 'ellipsis-start' | 'ellipsis-end';
+
+function getVisiblePages(currentPage: number, totalPages: number): PageItem[] {
+  if (totalPages <= 5) {
+    const pages: PageItem[] = [];
+    for (let i = 1; i <= totalPages; i += 1) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  if (currentPage <= 3) {
+    return [1, 2, 3, 4, 'ellipsis-end', totalPages];
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return [1, 'ellipsis-start', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+  }
+
+  return [
+    1,
+    'ellipsis-start',
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    'ellipsis-end',
+    totalPages,
+  ];
+}
+
+interface InvitationHistoryRowProps {
+  invitation: InvitationHistoryItem;
+  canManageMembers: boolean;
+  onCancel: (invitation: InvitationHistoryItem) => void;
+}
+
+function InvitationHistoryRow({
+  invitation,
+  canManageMembers,
+  onCancel,
+}: Readonly<InvitationHistoryRowProps>) {
+  const { t } = useTranslation();
+
+  let roleLabel = t('settings.roleBadgeMember');
+  let roleBadgeClass =
+    'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400 border border-transparent';
+  if (invitation.role === 'owner') {
+    roleLabel = t('settings.roleBadgeOwner');
+    roleBadgeClass = 'bg-[#7B6CF6]/10 text-[#7B6CF6] border border-[#7B6CF6]/30';
+  } else if (invitation.role === 'admin') {
+    roleLabel = t('settings.roleBadgeAdmin');
+    roleBadgeClass = 'bg-blue-500/10 text-blue-500 border border-blue-500/30';
+  }
+
+  let statusLabel = t('settings.statusBadgePending');
+  let statusBadgeClass = 'border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-500/10';
+  if (invitation.status === 'accepted') {
+    statusLabel = t('settings.statusBadgeAccepted');
+    statusBadgeClass =
+      'border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10';
+  } else if (invitation.status === 'rejected') {
+    statusLabel = t('settings.statusBadgeRejected');
+    statusBadgeClass = 'border-rose-500/20 text-rose-600 dark:text-rose-400 bg-rose-500/10';
+  } else if (invitation.status === 'canceled') {
+    statusLabel = t('settings.statusBadgeCanceled');
+    statusBadgeClass = 'border-slate-500/20 text-slate-600 dark:text-slate-400 bg-slate-500/10';
+  }
+
+  let formattedCreatedAt = '';
+  if (invitation.createdAt) {
+    formattedCreatedAt = new Date(invitation.createdAt).toLocaleDateString();
+  }
+
+  let formattedExpiresAt = '';
+  if (invitation.status === 'pending' && invitation.expiresAt) {
+    formattedExpiresAt = new Date(invitation.expiresAt).toLocaleDateString();
+  }
+
+  const isPending = invitation.status === 'pending';
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-[#131519] p-3 text-xs">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center flex-none">
+          <Mail className="w-3.5 h-3.5 text-[#7B6CF6]" />
+        </div>
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
+              {invitation.email}
+            </span>
+            <span
+              className={`text-[9.5px] font-semibold uppercase px-2 py-0.5 rounded-full ${roleBadgeClass}`}
+            >
+              {roleLabel}
+            </span>
+            <span
+              className={`text-[9.5px] font-semibold uppercase px-2 py-0.5 rounded-full border ${statusBadgeClass}`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 flex-wrap">
+            {formattedCreatedAt && (
+              <span>
+                {t('settings.sentAt')}: {formattedCreatedAt}
+              </span>
+            )}
+            {isPending && formattedExpiresAt && (
+              <span>
+                • {t('settings.expiresAt')}: {formattedExpiresAt}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {isPending && canManageMembers && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => onCancel(invitation)}
+          className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 self-end sm:self-center"
+        >
+          {t('settings.cancelInvite')}
+        </Button>
+      )}
+    </div>
+  );
 }
 
 export function SettingsPage() {
@@ -60,7 +218,19 @@ export function SettingsPage() {
     roleByOrgId,
     members,
     isLoadingMembers,
-    sentInvitations,
+    invitationsHistory,
+    invitationsPagination,
+    invitationPage,
+    invitationStatusFilter,
+    invitationSortOrder,
+    isLoadingInvitationsHistory,
+    isRefetchingInvitationsHistory,
+    refetchInvitationsHistory,
+    handleNextPage,
+    handlePrevPage,
+    handleSetPage,
+    handleStatusFilterChange,
+    handleSortOrderChange,
     isInviteModalOpen,
     setIsInviteModalOpen,
     inviteEmail,
@@ -92,6 +262,8 @@ export function SettingsPage() {
     handleSelectOrg,
   } = useSettingsPage();
 
+  const visiblePages = getVisiblePages(invitationPage, invitationsPagination.totalPages);
+
   let profileTabClass =
     'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-200';
   let organizationsTabClass =
@@ -109,6 +281,11 @@ export function SettingsPage() {
     organizationsTabClass = 'border-[#7B6CF6] text-[#7B6CF6]';
   } else {
     securityTabClass = 'border-[#7B6CF6] text-[#7B6CF6]';
+  }
+
+  let refreshSpinClass = '';
+  if (isRefetchingInvitationsHistory || isLoadingInvitationsHistory) {
+    refreshSpinClass = 'animate-spin';
   }
 
   return (
@@ -418,58 +595,144 @@ export function SettingsPage() {
                 })}
               </div>
 
-              {/* Sent Pending Invitations */}
-              {sentInvitations.length > 0 && (
-                <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-white/5">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                    <Mail className="w-3.5 h-3.5 text-[#7B6CF6]" />
-                    <span>
-                      {t('settings.pendingSentInvites')} ({sentInvitations.length})
-                    </span>
+              {/* Invitations History Section */}
+              {canManageMembers && (
+                <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-white/10">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-[#7B6CF6]" />
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {t('settings.invitationsHistoryTitle')}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {t('settings.invitationsHistoryDesc')}
+                    </p>
                   </div>
 
-                  <div className="space-y-2">
-                    {sentInvitations.map((inv: OrgInvitationItem) => {
-                      let inviteRoleLabel = t('settings.roleBadgeMember');
-                      if (inv.role === 'admin') {
-                        inviteRoleLabel = t('settings.roleBadgeAdmin');
-                      } else if (inv.role === 'owner') {
-                        inviteRoleLabel = t('settings.roleBadgeOwner');
-                      }
+                  {/* Filter & Sort Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {statusFilters.map((filter) => {
+                        let filterBtnClass =
+                          'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10';
+                        if (invitationStatusFilter === filter.value) {
+                          filterBtnClass = 'bg-[#7B6CF6] text-white';
+                        }
+                        return (
+                          <button
+                            key={filter.value}
+                            type="button"
+                            onClick={() => handleStatusFilterChange(filter.value)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filterBtnClass}`}
+                          >
+                            {t(filter.labelKey)}
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                      return (
-                        <div
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={invitationSortOrder}
+                        onChange={(e) => handleSortOrderChange(e.target.value as 'desc' | 'asc')}
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 dark:border-white/10 dark:bg-[#131519] dark:text-slate-100"
+                      >
+                        <option value="desc">{t('settings.sortNewest')}</option>
+                        <option value="asc">{t('settings.sortOldest')}</option>
+                      </select>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={refetchInvitationsHistory}
+                        disabled={isLoadingInvitationsHistory}
+                        aria-label="Refresh invitations"
+                        className="border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-300"
+                      >
+                        <RotateCw className={`w-3.5 h-3.5 ${refreshSpinClass}`} />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Loading State */}
+                  {isLoadingInvitationsHistory && (
+                    <div className="p-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7B6CF6]" />
+                      <span>{t('common.loading')}</span>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {!isLoadingInvitationsHistory && invitationsHistory.length === 0 && (
+                    <div className="rounded-xl border border-dashed border-slate-200 dark:border-white/10 p-6 text-center">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {t('settings.noInvitationsFound')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Invitations List */}
+                  {!isLoadingInvitationsHistory && invitationsHistory.length > 0 && (
+                    <div className="space-y-2">
+                      {invitationsHistory.map((inv) => (
+                        <InvitationHistoryRow
                           key={inv.id}
-                          className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-[#131519] p-3 text-xs"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center flex-none">
-                              <Mail className="w-3.5 h-3.5" />
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap min-w-0">
-                              <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
-                                {inv.email}
-                              </span>
-                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                                {inviteRoleLabel}
-                              </span>
-                            </div>
-                          </div>
+                          invitation={inv}
+                          canManageMembers={canManageMembers}
+                          onCancel={openCancelInvitationModal}
+                        />
+                      ))}
+                    </div>
+                  )}
 
-                          {canManageMembers && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openCancelInvitationModal(inv)}
-                              className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                            >
-                              {t('settings.cancelInvite')}
-                            </Button>
-                          )}
-                        </div>
-                      );
-                    })}
+                  {/* Pagination Bar */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-white/10 text-xs text-slate-500">
+                    <span className="font-medium text-slate-500 dark:text-slate-400">
+                      {t('settings.totalInvitations', {
+                        total: invitationsPagination.total,
+                      })}
+                    </span>
+                    <Pagination className="w-auto mx-0 justify-end">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={handlePrevPage}
+                            disabled={invitationPage <= 1 || isLoadingInvitationsHistory}
+                            text={t('settings.paginationPrevious')}
+                          />
+                        </PaginationItem>
+                        {visiblePages.map((pageItem) => {
+                          if (typeof pageItem === 'number') {
+                            return (
+                              <PaginationItem key={`page-${pageItem}`}>
+                                <PaginationLink
+                                  onClick={() => handleSetPage(pageItem)}
+                                  isActive={invitationPage === pageItem}
+                                >
+                                  {pageItem}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                          return (
+                            <PaginationItem key={pageItem}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        })}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={handleNextPage}
+                            disabled={
+                              invitationPage >= invitationsPagination.totalPages ||
+                              isLoadingInvitationsHistory
+                            }
+                            text={t('settings.paginationNext')}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   </div>
                 </div>
               )}

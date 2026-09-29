@@ -132,6 +132,23 @@ Every change carries a versioning consequence that must be recorded before compl
 3. **User-Centric CHANGELOG:** Add a `CHANGELOG.md` entry explaining _what_ changed from a user/consumer perspective, not internal code mechanics.
 4. **Contract Breaking = ALWAYS MAJOR:** Breaking a shared payload, an internal API, or an environment variable is automatically a MAJOR version bump.
 
+### 2.12 Server-Side Pagination Standard
+
+All list endpoints for collections that can grow over time (such as items, audit logs,
+members, invitation history, transactions, etc.) MUST implement server-side pagination:
+
+- **Query Parameters:** Endpoints must accept `page` (default: 1) and `pageSize` (default: 10,
+  maximum: 50) querystring parameters.
+- **Response Envelope:** Responses MUST return the standardized payload structure:
+  ```ts
+  { data: T[], pagination: { total: number, page: number, pageSize: number, totalPages: number } }
+  ```
+- **Ban on Client-Side Slicing:** Client-side pagination (fetching all records from the database
+  or API to slice in memory) is STRICTLY PROHIBITED for unbounded datasets.
+- **Prisma Query Standard:** Database queries must execute concurrently with total count
+  retrieval: `skip: (page - 1) * pageSize`, `take: pageSize`, alongside
+  `prisma.<model>.count({ where })`.
+
 ---
 
 ## 3. Database Architecture & Schema Ownership
@@ -192,10 +209,18 @@ Barrel files must never export the custom hook.
 
 ### 5.2 Performance Non-Functional Requirements (NFRs)
 
-1. **STRICT BAN ON TABLE POLLING:** Never use automated background polling loops (`refetchInterval`, recursive `setTimeout`, `setInterval`) on data listings.
-2. **Explicit Refresh Buttons:** Every data listing must provide an explicit, visible refresh button with an animated spinner during refetching.
-3. **Data Caching & Transitions:** Configure `staleTime` (e.g., 30s–60s) and `placeholderData: keepPreviousData` in TanStack Query to eliminate layout flickering during pagination and filter changes.
-4. **Heavy Computation Memoization:** Diff parsing, tree transformations, and static analysis summaries must be memoized with `useMemo` and `useCallback`.
+1. **STRICT BAN ON TABLE POLLING:** Never use automated background polling loops
+   (`refetchInterval`, recursive `setTimeout`, `setInterval`) on data listings.
+2. **Mandatory Server-Side Pagination:** All data tables displaying unbounded collections must
+   consume server-side paginated endpoints (`page`, `pageSize`). Client-side in-memory slicing
+   of full datasets is strictly prohibited.
+3. **Explicit Refresh Buttons:** Every data listing must provide an explicit, visible refresh button
+   with an animated spinner during refetching.
+4. **Data Caching & Transitions:** Configure `staleTime` (e.g., 30s–60s) and
+   `placeholderData: keepPreviousData` in TanStack Query to eliminate layout flickering during
+   pagination and filter changes.
+5. **Heavy Computation Memoization:** Diff parsing, tree transformations, and static analysis
+   summaries must be memoized with `useMemo` and `useCallback`.
 
 ### 5.3 React & SonarLint Compliance Guidelines
 
@@ -293,6 +318,7 @@ Before declaring any engineering task complete, verify:
 - [ ] No hardcoded magic strings; domain values placed in `as const` or enums.
 - [ ] All functions maintain Cognitive Complexity ≤ 15; parameter counts ≤ 7.
 - [ ] Currency values strictly maintained as integer cents (`priceCents`, `balanceCents`).
+- [ ] Server-side pagination enforced for unbounded collections; client-side slicing banned.
 - [ ] Table polling banned; manual refresh button implemented with visual loading state.
 - [ ] React functional component props typed with `Readonly<Props>`.
 - [ ] Database changes managed exclusively via Prisma Migrate (`apps/api/prisma/migrations/`).

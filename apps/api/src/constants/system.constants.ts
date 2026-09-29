@@ -12,3 +12,10 @@ export const RESPONSE_STATUS = {
 } as const;
 
 export type ResponseStatus = (typeof RESPONSE_STATUS)[keyof typeof RESPONSE_STATUS];
+
+export const SORT_ORDERS = {
+  ASC: 'asc',
+  DESC: 'desc',
+} as const;
+
+export type SortOrder = (typeof SORT_ORDERS)[keyof typeof SORT_ORDERS];

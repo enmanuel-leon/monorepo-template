@@ -1,6 +1,6 @@
 import { useState, useEffect, type SyntheticEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { authClient } from '../../lib/auth-client';
 import { apiFetch } from '../../lib/api-client';
 import type { CountryObj, TimezoneObj } from '../onboarding/use-onboarding-page';
@@ -50,6 +50,37 @@ export interface OrgInvitationItem {
   expiresAt: Date | string;
   organizationId: string;
 }
+
+export interface InvitationHistoryItem {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: string | null;
+  status: string;
+  expiresAt: string | Date;
+  createdAt: string | Date;
+  inviterId: string;
+  user?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  } | null;
+}
+
+interface InvitationsPagination {
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface PaginatedInvitationsResponse {
+  data: InvitationHistoryItem[];
+  pagination: InvitationsPagination;
+}
+
+export type InvitationStatusFilter = 'all' | 'pending' | 'accepted' | 'rejected' | 'canceled';
+export type InvitationSortOrder = 'desc' | 'asc';
 
 export function useSettingsPage() {
   const { t } = useTranslation();
@@ -118,9 +149,17 @@ export function useSettingsPage() {
 
   // Remove member state
   const [memberToRemove, setMemberToRemove] = useState<OrgMemberItem | null>(null);
-  const [invitationToCancel, setInvitationToCancel] = useState<OrgInvitationItem | null>(null);
+  const [invitationToCancel, setInvitationToCancel] = useState<
+    OrgInvitationItem | InvitationHistoryItem | null
+  >(null);
   const [isCancellingInvitation, setIsCancellingInvitation] = useState(false);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
+
+  // Invitations history state
+  const [invitationPage, setInvitationPage] = useState<number>(1);
+  const [invitationStatusFilter, setInvitationStatusFilter] =
+    useState<InvitationStatusFilter>('all');
+  const [invitationSortOrder, setInvitationSortOrder] = useState<InvitationSortOrder>('desc');
 
   const memberships = profileQuery.data?.user?.members || [];
   let isOwnerOfAnyOrg = false;
@@ -181,6 +220,67 @@ export function useSettingsPage() {
     },
     enabled: Boolean(activeOrg.data?.id && selectedTab === 'organizations'),
   });
+
+  const invitationsHistoryQuery = useQuery<PaginatedInvitationsResponse>({
+    queryKey: [
+      'org-invitations-history',
+      activeOrg.data?.id,
+      invitationPage,
+      invitationStatusFilter,
+      invitationSortOrder,
+    ],
+    queryFn: async () => {
+      if (!activeOrg.data?.id) {
+        return {
+          data: [],
+          pagination: { total: 0, page: 1, pageSize: 10, totalPages: 1 },
+        };
+      }
+      const params = new URLSearchParams();
+      params.set('page', String(invitationPage));
+      params.set('pageSize', '10');
+      params.set('sortOrder', invitationSortOrder);
+      if (invitationStatusFilter !== 'all') {
+        params.set('status', invitationStatusFilter);
+      }
+      return apiFetch<PaginatedInvitationsResponse>(
+        `/api/v1/organizations/${activeOrg.data.id}/invitations?${params.toString()}`,
+      );
+    },
+    enabled: Boolean(activeOrg.data?.id && selectedTab === 'organizations' && canManageMembers),
+    staleTime: 30 * 1000,
+    placeholderData: keepPreviousData,
+  });
+
+  function handleNextPage() {
+    const totalPages = invitationsHistoryQuery.data?.pagination?.totalPages || 1;
+    if (invitationPage < totalPages) {
+      setInvitationPage((prev) => prev + 1);
+    }
+  }
+
+  function handlePrevPage() {
+    if (invitationPage > 1) {
+      setInvitationPage((prev) => prev - 1);
+    }
+  }
+
+  function handleSetPage(page: number) {
+    const totalPages = invitationsHistoryQuery.data?.pagination?.totalPages || 1;
+    if (page >= 1 && page <= totalPages) {
+      setInvitationPage(page);
+    }
+  }
+
+  function handleStatusFilterChange(status: InvitationStatusFilter) {
+    setInvitationStatusFilter(status);
+    setInvitationPage(1);
+  }
+
+  function handleSortOrderChange(order: InvitationSortOrder) {
+    setInvitationSortOrder(order);
+    setInvitationPage(1);
+  }
 
   const countriesQuery = useQuery<CountryObj[]>({
     queryKey: ['reference-countries-full'],
@@ -347,6 +447,7 @@ export function useSettingsPage() {
     toast.success(t('settings.organizationSelected'));
     await membersQuery.refetch();
     await sentInvitationsQuery.refetch();
+    await invitationsHistoryQuery.refetch();
   }
 
   async function handleInviteMember(e: SyntheticEvent<HTMLFormElement>) {
@@ -372,6 +473,7 @@ export function useSettingsPage() {
     setIsInviteModalOpen(false);
     toast.success(t('settings.inviteSent'));
     await sentInvitationsQuery.refetch();
+    await invitationsHistoryQuery.refetch();
   }
 
   function openRemoveMemberModal(member: OrgMemberItem) {
@@ -404,7 +506,7 @@ export function useSettingsPage() {
     await membersQuery.refetch();
   }
 
-  function openCancelInvitationModal(invitation: OrgInvitationItem) {
+  function openCancelInvitationModal(invitation: OrgInvitationItem | InvitationHistoryItem) {
     setInvitationToCancel(invitation);
   }
 
@@ -431,6 +533,7 @@ export function useSettingsPage() {
     setInvitationToCancel(null);
     toast.success(t('settings.inviteCancelled'));
     await sentInvitationsQuery.refetch();
+    await invitationsHistoryQuery.refetch();
   }
 
   async function handleCancelInvitation(invitationId: string) {
@@ -445,6 +548,7 @@ export function useSettingsPage() {
 
     toast.success(t('settings.inviteCancelled'));
     await sentInvitationsQuery.refetch();
+    await invitationsHistoryQuery.refetch();
   }
 
   return {
@@ -483,6 +587,24 @@ export function useSettingsPage() {
     isLoadingMembers: membersQuery.isPending,
     sentInvitations: sentInvitationsQuery.data || [],
     isLoadingSentInvitations: sentInvitationsQuery.isPending,
+    invitationsHistory: invitationsHistoryQuery.data?.data || [],
+    invitationsPagination: invitationsHistoryQuery.data?.pagination || {
+      total: 0,
+      page: 1,
+      pageSize: 10,
+      totalPages: 1,
+    },
+    invitationPage,
+    invitationStatusFilter,
+    invitationSortOrder,
+    isLoadingInvitationsHistory: invitationsHistoryQuery.isLoading,
+    refetchInvitationsHistory: () => invitationsHistoryQuery.refetch(),
+    isRefetchingInvitationsHistory: invitationsHistoryQuery.isRefetching,
+    handleNextPage,
+    handlePrevPage,
+    handleSetPage,
+    handleStatusFilterChange,
+    handleSortOrderChange,
     isInviteModalOpen,
     setIsInviteModalOpen,
     inviteEmail,

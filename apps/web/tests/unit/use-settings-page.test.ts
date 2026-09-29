@@ -114,6 +114,7 @@ const mockCountriesData = [
 describe('useSettingsPage Hook Unit Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockTabParam = undefined;
 
     mockRefetchPasskeys.mockResolvedValue({});
     mockUseSession.mockReturnValue({
@@ -200,6 +201,12 @@ describe('useSettingsPage Hook Unit Tests', () => {
             timezone: mockCountriesData[0].timezones[0],
             members: [{ id: 'm-1', organizationId: 'org-1', role: 'owner' }],
           },
+        };
+      }
+      if (path.startsWith('/api/v1/organizations/org-1/invitations')) {
+        return {
+          data: [],
+          pagination: { total: 0, page: 1, pageSize: 10, totalPages: 1 },
         };
       }
       return {};
@@ -1073,5 +1080,273 @@ describe('useSettingsPage Hook Unit Tests', () => {
 
     expect(hook.current.activeTab).toBe('security');
     hook.unmount();
+  });
+
+  describe('Invitations history pagination and filtering', () => {
+    function setupInvitationsTest() {
+      mockTabParam = 'organizations';
+      const queryClient = createTestQueryClient();
+      queryClient.setQueryData(['current-user-profile'], {
+        user: {
+          id: 'u-1',
+          name: 'Original Name',
+          email: 'user@example.com',
+          members: [{ id: 'm-1', organizationId: 'org-1', role: 'owner' }],
+        },
+      });
+      return queryClient;
+    }
+
+    it('handleNextPage increments page when page < totalPages and does nothing when page === totalPages', () => {
+      const queryClient = setupInvitationsTest();
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 1, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 20, page: 1, pageSize: 10, totalPages: 2 },
+      });
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 2, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 20, page: 2, pageSize: 10, totalPages: 2 },
+      });
+
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      expect(hook.current.invitationPage).toBe(1);
+      expect(hook.current.invitationsPagination.totalPages).toBe(2);
+
+      act(() => {
+        hook.current.handleNextPage();
+      });
+
+      expect(hook.current.invitationPage).toBe(2);
+
+      // When page === totalPages (2 === 2), handleNextPage should do nothing
+      act(() => {
+        hook.current.handleNextPage();
+      });
+
+      expect(hook.current.invitationPage).toBe(2);
+      hook.unmount();
+    });
+
+    it('handleNextPage does nothing when initial totalPages is 1', () => {
+      const queryClient = setupInvitationsTest();
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 1, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 5, page: 1, pageSize: 10, totalPages: 1 },
+      });
+
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      expect(hook.current.invitationPage).toBe(1);
+
+      act(() => {
+        hook.current.handleNextPage();
+      });
+
+      expect(hook.current.invitationPage).toBe(1);
+      hook.unmount();
+    });
+
+    it('handlePrevPage decrements page when page > 1 and does nothing when page === 1', () => {
+      const queryClient = setupInvitationsTest();
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 1, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 20, page: 1, pageSize: 10, totalPages: 2 },
+      });
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 2, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 20, page: 2, pageSize: 10, totalPages: 2 },
+      });
+
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      // Initially at page 1: handlePrevPage should do nothing
+      expect(hook.current.invitationPage).toBe(1);
+      act(() => {
+        hook.current.handlePrevPage();
+      });
+      expect(hook.current.invitationPage).toBe(1);
+
+      // Move to page 2 first
+      act(() => {
+        hook.current.handleNextPage();
+      });
+      expect(hook.current.invitationPage).toBe(2);
+
+      // Decrement back to page 1
+      act(() => {
+        hook.current.handlePrevPage();
+      });
+      expect(hook.current.invitationPage).toBe(1);
+
+      hook.unmount();
+    });
+
+    it('handleSetPage updates page when valid target page is provided', () => {
+      const queryClient = setupInvitationsTest();
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 1, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 30, page: 1, pageSize: 10, totalPages: 3 },
+      });
+
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      expect(hook.current.invitationPage).toBe(1);
+
+      act(() => {
+        hook.current.handleSetPage(3);
+      });
+
+      expect(hook.current.invitationPage).toBe(3);
+
+      act(() => {
+        hook.current.handleSetPage(2);
+      });
+
+      expect(hook.current.invitationPage).toBe(2);
+
+      hook.unmount();
+    });
+
+    it('handleSetPage ignores invalid target page numbers', () => {
+      const queryClient = setupInvitationsTest();
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 1, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 30, page: 1, pageSize: 10, totalPages: 3 },
+      });
+
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      expect(hook.current.invitationPage).toBe(1);
+
+      act(() => {
+        hook.current.handleSetPage(0);
+      });
+
+      expect(hook.current.invitationPage).toBe(1);
+
+      act(() => {
+        hook.current.handleSetPage(-1);
+      });
+
+      expect(hook.current.invitationPage).toBe(1);
+
+      act(() => {
+        hook.current.handleSetPage(4);
+      });
+
+      expect(hook.current.invitationPage).toBe(1);
+
+      hook.unmount();
+    });
+
+    it('handleStatusFilterChange updates status filter and resets invitationPage to 1', () => {
+      const queryClient = setupInvitationsTest();
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 1, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 20, page: 1, pageSize: 10, totalPages: 2 },
+      });
+
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      act(() => {
+        hook.current.handleNextPage();
+      });
+      expect(hook.current.invitationPage).toBe(2);
+
+      act(() => {
+        hook.current.handleStatusFilterChange('pending');
+      });
+
+      expect(hook.current.invitationStatusFilter).toBe('pending');
+      expect(hook.current.invitationPage).toBe(1);
+
+      act(() => {
+        hook.current.handleStatusFilterChange('all');
+      });
+
+      expect(hook.current.invitationStatusFilter).toBe('all');
+      expect(hook.current.invitationPage).toBe(1);
+      hook.unmount();
+    });
+
+    it('handleSortOrderChange updates sort order and resets invitationPage to 1', () => {
+      const queryClient = setupInvitationsTest();
+      queryClient.setQueryData(['org-invitations-history', 'org-1', 1, 'all', 'desc'], {
+        data: [],
+        pagination: { total: 20, page: 1, pageSize: 10, totalPages: 2 },
+      });
+
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      act(() => {
+        hook.current.handleNextPage();
+      });
+      expect(hook.current.invitationPage).toBe(2);
+
+      act(() => {
+        hook.current.handleSortOrderChange('asc');
+      });
+
+      expect(hook.current.invitationSortOrder).toBe('asc');
+      expect(hook.current.invitationPage).toBe(1);
+
+      act(() => {
+        hook.current.handleSortOrderChange('desc');
+      });
+
+      expect(hook.current.invitationSortOrder).toBe('desc');
+      expect(hook.current.invitationPage).toBe(1);
+      hook.unmount();
+    });
+
+    it('refetchInvitationsHistory calls query refetch and fetches latest invitations history', async () => {
+      const queryClient = setupInvitationsTest();
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+
+      const apiFetchSpy = vi.spyOn(apiClient, 'apiFetch');
+      apiFetchSpy.mockClear();
+
+      await act(async () => {
+        await hook.current.refetchInvitationsHistory();
+      });
+
+      expect(apiFetchSpy).toHaveBeenCalledWith(
+        '/api/v1/organizations/org-1/invitations?page=1&pageSize=10&sortOrder=desc',
+      );
+      hook.unmount();
+    });
+
+    it('invitationsHistoryQuery queryFn executes when status filter is pending vs all', async () => {
+      const queryClient = setupInvitationsTest();
+      const apiFetchSpy = vi.spyOn(apiClient, 'apiFetch');
+
+      const hook = renderHook(() => useSettingsPage(), queryClient);
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      });
+
+      expect(apiFetchSpy).toHaveBeenCalledWith(
+        '/api/v1/organizations/org-1/invitations?page=1&pageSize=10&sortOrder=desc',
+      );
+
+      apiFetchSpy.mockClear();
+
+      await act(async () => {
+        hook.current.handleStatusFilterChange('pending');
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      });
+
+      expect(apiFetchSpy).toHaveBeenCalledWith(
+        '/api/v1/organizations/org-1/invitations?page=1&pageSize=10&sortOrder=desc&status=pending',
+      );
+
+      hook.unmount();
+    });
   });
 });
