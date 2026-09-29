@@ -56,3 +56,6 @@ const mockDoc = {
 };
 
 globalThis.document ??= mockDoc as unknown as Document;
+
+// @ts-expect-error define React act environment
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
