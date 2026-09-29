@@ -90,6 +90,8 @@ export function useSettingsPage() {
 
   // Remove member state
   const [memberToRemove, setMemberToRemove] = useState<OrgMemberItem | null>(null);
+  const [invitationToCancel, setInvitationToCancel] = useState<OrgInvitationItem | null>(null);
+  const [isCancellingInvitation, setIsCancellingInvitation] = useState(false);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
 
   const memberships = profileQuery.data?.user?.members || [];
@@ -369,6 +371,35 @@ export function useSettingsPage() {
     await membersQuery.refetch();
   }
 
+  function openCancelInvitationModal(invitation: OrgInvitationItem) {
+    setInvitationToCancel(invitation);
+  }
+
+  function closeCancelInvitationModal() {
+    setInvitationToCancel(null);
+  }
+
+  async function handleConfirmCancelInvitation() {
+    if (!invitationToCancel) {
+      return;
+    }
+
+    setIsCancellingInvitation(true);
+    const result = await authClient.organization.cancelInvitation({
+      invitationId: invitationToCancel.id,
+    });
+    setIsCancellingInvitation(false);
+
+    if (result.error) {
+      toast.error(t('settings.inviteError'));
+      return;
+    }
+
+    setInvitationToCancel(null);
+    toast.success(t('settings.inviteCancelled'));
+    await sentInvitationsQuery.refetch();
+  }
+
   async function handleCancelInvitation(invitationId: string) {
     const result = await authClient.organization.cancelInvitation({
       invitationId,
@@ -431,6 +462,11 @@ export function useSettingsPage() {
     openRemoveMemberModal,
     closeRemoveMemberModal,
     handleConfirmRemoveMember,
+    invitationToCancel,
+    isCancellingInvitation,
+    openCancelInvitationModal,
+    closeCancelInvitationModal,
+    handleConfirmCancelInvitation,
     handleCancelInvitation,
     activeTab,
     setActiveTab,

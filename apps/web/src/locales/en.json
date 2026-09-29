@@ -21,7 +21,8 @@
     "orgs": "Organizations",
     "switchOrg": "Switch Organization",
     "createOrg": "Create New Organization",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "confirm": "Confirm"
   },
   "auth": {
     "signIn": "Sign In",
@@ -151,7 +152,9 @@
     "youBadge": "You",
     "roleBadgeOwner": "Owner",
     "roleBadgeAdmin": "Admin",
-    "roleBadgeMember": "Member"
+    "roleBadgeMember": "Member",
+    "cancelInviteTitle": "Cancel Invitation",
+    "cancelInviteConfirm": "Are you sure you want to cancel the invitation sent to {{email}}? The recipient will no longer be able to join using this link."
   },
   "tour": {
     "step": "Step",
@@ -227,6 +230,12 @@
   "items": {
     "title": "Items Catalog",
     "addItem": "Add Item",
-    "createModalTitle": "Create New Item"
+    "createModalTitle": "Create New Item",
+    "deleteTitle": "Delete Item",
+    "deleteConfirm": "Are you sure you want to delete this item? This action cannot be undone.",
+    "createdSuccess": "Item created successfully.",
+    "createError": "Failed to create item.",
+    "deletedSuccess": "Item deleted successfully.",
+    "deleteError": "Failed to delete item."
   }
 }

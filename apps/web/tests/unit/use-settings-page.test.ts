@@ -869,6 +869,97 @@ describe('useSettingsPage Hook Unit Tests', () => {
     hook.unmount();
   });
 
+  it('handles cancel invitation modal lifecycle and confirms cancellation', async () => {
+    mockCancelInvitation.mockResolvedValue({ error: null });
+    const hook = renderHook(() => useSettingsPage());
+
+    const testInvitation = {
+      id: 'inv-456',
+      email: 'collaborator@example.com',
+      role: 'member',
+      status: 'pending',
+      expiresAt: '2026-10-01',
+      organizationId: 'org-test-1',
+    };
+
+    act(() => {
+      hook.current.openCancelInvitationModal(testInvitation);
+    });
+
+    expect(hook.current.invitationToCancel).toEqual(testInvitation);
+
+    await act(async () => {
+      await hook.current.handleConfirmCancelInvitation();
+    });
+
+    expect(mockCancelInvitation).toHaveBeenCalledWith({
+      invitationId: 'inv-456',
+    });
+    expect(toast.success).toHaveBeenCalledWith('settings.inviteCancelled');
+    expect(hook.current.invitationToCancel).toBeNull();
+    hook.unmount();
+  });
+
+  it('closeCancelInvitationModal resets modal state without calling cancel API', () => {
+    const hook = renderHook(() => useSettingsPage());
+    const testInvitation = {
+      id: 'inv-789',
+      email: 'user@example.com',
+      role: 'member',
+      status: 'pending',
+      expiresAt: '2026-10-01',
+      organizationId: 'org-test-1',
+    };
+
+    act(() => {
+      hook.current.openCancelInvitationModal(testInvitation);
+    });
+    expect(hook.current.invitationToCancel).toEqual(testInvitation);
+
+    act(() => {
+      hook.current.closeCancelInvitationModal();
+    });
+    expect(hook.current.invitationToCancel).toBeNull();
+    expect(mockCancelInvitation).not.toHaveBeenCalled();
+    hook.unmount();
+  });
+
+  it('handleConfirmCancelInvitation returns early when invitationToCancel is null', async () => {
+    const hook = renderHook(() => useSettingsPage());
+
+    await act(async () => {
+      await hook.current.handleConfirmCancelInvitation();
+    });
+
+    expect(mockCancelInvitation).not.toHaveBeenCalled();
+    hook.unmount();
+  });
+
+  it('shows error toast when confirm cancel invitation returns error', async () => {
+    mockCancelInvitation.mockResolvedValue({ error: { message: 'Failed cancel' } });
+    const hook = renderHook(() => useSettingsPage());
+    const testInvitation = {
+      id: 'inv-fail',
+      email: 'fail@example.com',
+      role: 'member',
+      status: 'pending',
+      expiresAt: '2026-10-01',
+      organizationId: 'org-test-1',
+    };
+
+    act(() => {
+      hook.current.openCancelInvitationModal(testInvitation);
+    });
+
+    await act(async () => {
+      await hook.current.handleConfirmCancelInvitation();
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('settings.inviteError');
+    expect(hook.current.isCancellingInvitation).toBe(false);
+    hook.unmount();
+  });
+
   it('exercises membersQuery and sentInvitationsQuery query functions under edge cases', async () => {
     mockListMembers.mockResolvedValueOnce({ error: { message: 'Forbidden' }, data: null });
     mockListInvitations.mockResolvedValueOnce({ error: null, data: 'invalid-non-array' });

@@ -1,5 +1,6 @@
 import { useState, type SyntheticEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { apiFetch } from '../../lib/api-client';
 import { authClient } from '../../lib/auth-client';
@@ -12,9 +13,11 @@ export interface Item {
 }
 
 export function useItemsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const activeOrg = authClient.useActiveOrganization();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [itemToDeleteId, setItemToDeleteId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
@@ -56,10 +59,10 @@ export function useItemsPage() {
       setIsModalOpen(false);
       setTitle('');
       setDescription('');
-      toast.success('Item created successfully!');
+      toast.success(t('items.createdSuccess'));
     },
     onError: () => {
-      toast.error('Failed to create item');
+      toast.error(t('items.createError'));
     },
   });
 
@@ -71,10 +74,11 @@ export function useItemsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
-      toast.success('Item deleted successfully!');
+      setItemToDeleteId(null);
+      toast.success(t('items.deletedSuccess'));
     },
     onError: () => {
-      toast.error('Failed to delete item');
+      toast.error(t('items.deleteError'));
     },
   });
 
@@ -84,6 +88,21 @@ export function useItemsPage() {
       return;
     }
     createMutation.mutate();
+  }
+
+  function openDeleteModal(id: string) {
+    setItemToDeleteId(id);
+  }
+
+  function closeDeleteModal() {
+    setItemToDeleteId(null);
+  }
+
+  async function handleConfirmDelete() {
+    if (!itemToDeleteId) {
+      return;
+    }
+    await deleteMutation.mutateAsync(itemToDeleteId);
   }
 
   return {
@@ -97,7 +116,11 @@ export function useItemsPage() {
     setDescription,
     isCreating: createMutation.isPending,
     handleCreate,
-    handleDelete: (id: string) => deleteMutation.mutate(id),
     handleRefresh: () => refetch(),
+    itemToDeleteId,
+    openDeleteModal,
+    closeDeleteModal,
+    handleConfirmDelete,
+    isDeleting: deleteMutation.isPending,
   };
 }

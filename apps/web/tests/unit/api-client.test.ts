@@ -16,7 +16,7 @@ describe('Frontend API Client', () => {
     expect(getApiUrl(path)).toBe('/api/v1/me');
   });
 
-  it('apiFetch performs request with credentials include and returns JSON on success', async () => {
+  it('apiFetch omits Content-Type header when body is not provided', async () => {
     const mockData = { id: 'user-1', name: 'Test User' };
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -33,9 +33,63 @@ describe('Frontend API Client', () => {
     const callArgs = mockFetch.mock.calls[0];
     const fetchOptions = callArgs[1] as RequestInit;
     expect(fetchOptions.credentials).toBe('include');
+    expect(fetchOptions.headers).toEqual({});
+  });
+
+  it('apiFetch sets Content-Type application/json when body is provided', async () => {
+    const mockCreated = { id: 'item-1', title: 'New Item' };
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => mockCreated,
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const bodyPayload = JSON.stringify({ title: 'New Item' });
+    const result = await apiFetch('/api/v1/items', {
+      method: 'POST',
+      body: bodyPayload,
+    });
+
+    expect(result).toEqual(mockCreated);
+    const callArgs = mockFetch.mock.calls[0];
+    const fetchOptions = callArgs[1] as RequestInit;
     expect(fetchOptions.headers).toEqual({
       'Content-Type': 'application/json',
     });
+  });
+
+  it('apiFetch preserves and merges custom headers (Headers instance, Array, Record)', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const headersInstance = new Headers();
+    headersInstance.set('X-Custom-One', 'value-1');
+
+    await apiFetch('/api/v1/items', {
+      headers: headersInstance,
+    });
+
+    const call1 = mockFetch.mock.calls[0][1] as RequestInit;
+    expect((call1.headers as Record<string, string>)['X-Custom-One']).toBe('value-1');
+
+    await apiFetch('/api/v1/items', {
+      headers: [['X-Custom-Two', 'value-2']],
+    });
+
+    const call2 = mockFetch.mock.calls[1][1] as RequestInit;
+    expect((call2.headers as Record<string, string>)['X-Custom-Two']).toBe('value-2');
+
+    await apiFetch('/api/v1/items', {
+      headers: { 'X-Custom-Three': 'value-3' },
+    });
+
+    const call3 = mockFetch.mock.calls[2][1] as RequestInit;
+    expect((call3.headers as Record<string, string>)['X-Custom-Three']).toBe('value-3');
   });
 
   it('apiFetch throws structured error when response status is not ok', async () => {

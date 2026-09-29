@@ -3,6 +3,7 @@ import { useItemsPage } from './use-items-page';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
+import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { RefreshCw, Plus, Trash2 } from 'lucide-react';
 
 export function ItemsPage() {
@@ -18,8 +19,12 @@ export function ItemsPage() {
     setDescription,
     isCreating,
     handleCreate,
-    handleDelete,
     handleRefresh,
+    itemToDeleteId,
+    openDeleteModal,
+    closeDeleteModal,
+    handleConfirmDelete,
+    isDeleting,
   } = useItemsPage();
 
   return (
@@ -95,7 +100,12 @@ export function ItemsPage() {
                       {new Date(item.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <Button size="sm" variant="danger" onClick={() => handleDelete(item.id)}>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => openDeleteModal(item.id)}
+                        aria-label={t('items.deleteTitle')}
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </td>
@@ -140,6 +150,19 @@ export function ItemsPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Modal for Confirming Item Deletion */}
+      <ConfirmModal
+        isOpen={Boolean(itemToDeleteId)}
+        onClose={closeDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title={t('items.deleteTitle')}
+        description={t('items.deleteConfirm')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

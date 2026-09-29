@@ -21,7 +21,8 @@
     "orgs": "Organizaciones",
     "switchOrg": "Cambiar Organización",
     "createOrg": "Crear Nueva Organización",
-    "navigation": "Navegación"
+    "navigation": "Navegación",
+    "confirm": "Confirmar"
   },
   "auth": {
     "signIn": "Iniciar Sesión",
@@ -151,7 +152,9 @@
     "youBadge": "Tú",
     "roleBadgeOwner": "Propietario",
     "roleBadgeAdmin": "Administrador",
-    "roleBadgeMember": "Miembro"
+    "roleBadgeMember": "Miembro",
+    "cancelInviteTitle": "Cancelar Invitación",
+    "cancelInviteConfirm": "¿Estás seguro de que deseas cancelar la invitación enviada a {{email}}? El destinatario ya no podrá unirse mediante este enlace."
   },
   "tour": {
     "step": "Paso del Tour",
@@ -227,6 +230,12 @@
   "items": {
     "title": "Catálogo de Elementos",
     "addItem": "Agregar Elemento",
-    "createModalTitle": "Crear Nuevo Elemento"
+    "createModalTitle": "Crear Nuevo Elemento",
+    "deleteTitle": "Eliminar Elemento",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.",
+    "createdSuccess": "Elemento creado correctamente.",
+    "createError": "No pudimos crear el elemento.",
+    "deletedSuccess": "Elemento eliminado correctamente.",
+    "deleteError": "No pudimos eliminar el elemento."
   }
 }

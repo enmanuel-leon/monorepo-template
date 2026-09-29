@@ -3,6 +3,7 @@ import { useSettingsPage, type OrgMemberItem, type OrgInvitationItem } from './u
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
+import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { CustomCountrySelect } from '../../components/ui/custom-country-select';
 import {
   Lock,
@@ -71,7 +72,11 @@ export function SettingsPage() {
     openRemoveMemberModal,
     closeRemoveMemberModal,
     handleConfirmRemoveMember,
-    handleCancelInvitation,
+    invitationToCancel,
+    isCancellingInvitation,
+    openCancelInvitationModal,
+    closeCancelInvitationModal,
+    handleConfirmCancelInvitation,
     passkeyToDeleteId,
     openDeletePasskeyModal,
     closeDeletePasskeyModal,
@@ -435,7 +440,7 @@ export function SettingsPage() {
                               type="button"
                               size="sm"
                               variant="outline"
-                              onClick={() => handleCancelInvitation(inv.id)}
+                              onClick={() => openCancelInvitationModal(inv)}
                               className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             >
                               {t('settings.cancelInvite')}
@@ -637,68 +642,45 @@ export function SettingsPage() {
       </Modal>
 
       {/* Modal for Removing Member */}
-      <Modal
+      <ConfirmModal
         isOpen={Boolean(memberToRemove)}
         onClose={closeRemoveMemberModal}
+        onConfirm={handleConfirmRemoveMember}
         title={t('settings.removeMember')}
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            {t('settings.removeMemberConfirm')}
-          </p>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeRemoveMemberModal}
-              disabled={isRemovingMember}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              type="button"
-              onClick={handleConfirmRemoveMember}
-              disabled={isRemovingMember}
-              className="bg-red-600 text-white hover:bg-red-700"
-            >
-              {isRemovingMember && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
-              {t('common.delete')}
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        description={t('settings.removeMemberConfirm')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        variant="danger"
+        isLoading={isRemovingMember}
+      />
 
       {/* Modal for Deleting Passkey */}
-      <Modal
+      <ConfirmModal
         isOpen={Boolean(passkeyToDeleteId)}
         onClose={closeDeletePasskeyModal}
+        onConfirm={handleConfirmDeletePasskey}
         title={t('settings.deletePasskey')}
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            {t('settings.passkeyDeleteConfirm')}
-          </p>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeDeletePasskeyModal}
-              disabled={isManagingPasskey}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              type="button"
-              onClick={handleConfirmDeletePasskey}
-              disabled={isManagingPasskey}
-              className="bg-red-600 text-white hover:bg-red-700"
-            >
-              {isManagingPasskey && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
-              {t('common.delete')}
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        description={t('settings.passkeyDeleteConfirm')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        variant="danger"
+        isLoading={isManagingPasskey}
+      />
+
+      {/* Modal for Cancelling Invitation */}
+      <ConfirmModal
+        isOpen={Boolean(invitationToCancel)}
+        onClose={closeCancelInvitationModal}
+        onConfirm={handleConfirmCancelInvitation}
+        title={t('settings.cancelInviteTitle')}
+        description={t('settings.cancelInviteConfirm', {
+          email: invitationToCancel?.email,
+        })}
+        confirmText={t('common.confirm')}
+        cancelText={t('common.cancel')}
+        variant="warning"
+        isLoading={isCancellingInvitation}
+      />
 
       {/* Modal for Creating New Organization */}
       <Modal
