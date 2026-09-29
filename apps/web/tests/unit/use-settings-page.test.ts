@@ -20,6 +20,18 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
+const mockNavigate = vi.fn();
+let mockTabParam: string | undefined = undefined;
+
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+    useParams: () => ({ tab: mockTabParam }),
+  };
+});
+
 const mockUseSession = vi.fn();
 const mockUseActiveOrganization = vi.fn();
 const mockUseListOrganizations = vi.fn();
@@ -1009,6 +1021,57 @@ describe('useSettingsPage Hook Unit Tests', () => {
       await hook.current.handleSelectOrg('org-target');
     });
 
+    hook.unmount();
+  });
+
+  it('maps organization roles in roleByOrgId correctly', () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(['current-user-profile'], {
+      user: {
+        id: 'u-1',
+        members: [
+          { id: 'm-1', organizationId: 'org-1', role: 'owner' },
+          { id: 'm-2', organizationId: 'org-2', role: 'member' },
+        ],
+      },
+    });
+
+    const hook = renderHook(() => useSettingsPage(), queryClient);
+
+    expect(hook.current.roleByOrgId.get('org-1')).toBe('owner');
+    expect(hook.current.roleByOrgId.get('org-2')).toBe('member');
+    expect(hook.current.roleByOrgId.get('org-unknown')).toBeUndefined();
+    hook.unmount();
+  });
+
+  it('initializes activeTab from router tab param and navigates on setActiveTab', () => {
+    mockTabParam = 'organizations';
+    const hook = renderHook(() => useSettingsPage());
+
+    expect(hook.current.activeTab).toBe('organizations');
+
+    act(() => {
+      hook.current.setActiveTab('security');
+    });
+
+    expect(hook.current.activeTab).toBe('security');
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/security');
+
+    act(() => {
+      hook.current.setActiveTab('profile');
+    });
+
+    expect(hook.current.activeTab).toBe('profile');
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/profile');
+
+    hook.unmount();
+  });
+
+  it('initializes activeTab to security when tab param is security', () => {
+    mockTabParam = 'security';
+    const hook = renderHook(() => useSettingsPage());
+
+    expect(hook.current.activeTab).toBe('security');
     hook.unmount();
   });
 });

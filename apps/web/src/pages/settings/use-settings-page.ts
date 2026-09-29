@@ -1,4 +1,5 @@
 import { useState, useEffect, type SyntheticEvent } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authClient } from '../../lib/auth-client';
 import { apiFetch } from '../../lib/api-client';
@@ -38,6 +39,8 @@ export interface OrgMemberItem {
     image?: string | null;
   };
 }
+
+export type SettingsTab = 'profile' | 'organizations' | 'security';
 
 export interface OrgInvitationItem {
   id: string;
@@ -80,7 +83,32 @@ export function useSettingsPage() {
   const [editingPasskeyName, setEditingPasskeyName] = useState('');
   const [isManagingPasskey, setIsManagingPasskey] = useState(false);
   const [passkeyToDeleteId, setPasskeyToDeleteId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'profile' | 'organizations' | 'security'>('profile');
+  const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+
+  let initialTab: SettingsTab = 'profile';
+  if (tab === 'organizations' || tab === 'organization') {
+    initialTab = 'organizations';
+  } else if (tab === 'security') {
+    initialTab = 'security';
+  }
+
+  const [selectedTab, setSelectedTab] = useState<SettingsTab>(initialTab);
+
+  useEffect(() => {
+    if (tab === 'organizations' || tab === 'organization') {
+      setSelectedTab('organizations');
+    } else if (tab === 'security') {
+      setSelectedTab('security');
+    } else if (tab === 'profile') {
+      setSelectedTab('profile');
+    }
+  }, [tab]);
+
+  function setActiveTab(nextTab: SettingsTab) {
+    setSelectedTab(nextTab);
+    navigate(`/settings/${nextTab}`);
+  }
 
   // Invite member state
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -101,6 +129,11 @@ export function useSettingsPage() {
       isOwnerOfAnyOrg = true;
       break;
     }
+  }
+
+  const roleByOrgId = new Map<string, string>();
+  for (const m of memberships) {
+    roleByOrgId.set(m.organizationId, m.role);
   }
 
   let currentOrgRole = 'member';
@@ -146,7 +179,7 @@ export function useSettingsPage() {
       const allInvites = res.data as unknown as OrgInvitationItem[];
       return allInvites.filter((inv) => inv.status === 'pending');
     },
-    enabled: Boolean(activeOrg.data?.id && activeTab === 'organizations'),
+    enabled: Boolean(activeOrg.data?.id && selectedTab === 'organizations'),
   });
 
   const countriesQuery = useQuery<CountryObj[]>({
@@ -445,6 +478,7 @@ export function useSettingsPage() {
     isOwnerOfAnyOrg,
     canManageMembers,
     currentOrgRole,
+    roleByOrgId,
     members: membersQuery.data || [],
     isLoadingMembers: membersQuery.isPending,
     sentInvitations: sentInvitationsQuery.data || [],
@@ -468,7 +502,7 @@ export function useSettingsPage() {
     closeCancelInvitationModal,
     handleConfirmCancelInvitation,
     handleCancelInvitation,
-    activeTab,
+    activeTab: selectedTab,
     setActiveTab,
     passkeyToDeleteId,
     openDeletePasskeyModal,

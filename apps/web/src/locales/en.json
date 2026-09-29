@@ -154,7 +154,8 @@
     "roleBadgeAdmin": "Admin",
     "roleBadgeMember": "Member",
     "cancelInviteTitle": "Cancel Invitation",
-    "cancelInviteConfirm": "Are you sure you want to cancel the invitation sent to {{email}}? The recipient will no longer be able to join using this link."
+    "cancelInviteConfirm": "Are you sure you want to cancel the invitation sent to {{email}}? The recipient will no longer be able to join using this link.",
+    "you": "You"
   },
   "tour": {
     "step": "Step",

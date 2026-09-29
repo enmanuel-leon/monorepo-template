@@ -9,6 +9,7 @@ import {
   Lock,
   Plus,
   Building2,
+  Crown,
   KeyRound,
   Pencil,
   Trash2,
@@ -56,6 +57,7 @@ export function SettingsPage() {
     isManagingPasskey,
     isOwnerOfAnyOrg,
     canManageMembers,
+    roleByOrgId,
     members,
     isLoadingMembers,
     sentInvitations,
@@ -245,22 +247,41 @@ export function SettingsPage() {
                   isCurrent = true;
                 }
 
+                const orgRole = roleByOrgId.get(org.id) || 'member';
+                let isOrgOwner = false;
+                if (orgRole === 'owner') {
+                  isOrgOwner = true;
+                }
+
                 return (
                   <div
                     key={org.id}
                     className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-[#131519] p-3.5 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#7B6CF6]/15 flex items-center justify-center text-[#7B6CF6]">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-[#7B6CF6]/15 flex items-center justify-center text-[#7B6CF6] flex-none">
                         <Building2 className="w-4 h-4" />
                       </div>
-                      <span className="font-medium text-slate-800 dark:text-slate-200 text-sm">
-                        {org.name}
-                      </span>
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">
+                            {org.name}
+                          </span>
+                          {isOrgOwner && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 flex-none">
+                              <Crown className="w-3 h-3" />
+                              <span>{t('settings.memberRoleOwner')}</span>
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+                          {org.id}
+                        </span>
+                      </div>
                     </div>
 
                     {isCurrent && (
-                      <span className="text-xs font-semibold text-[#7B6CF6] bg-[#7B6CF6]/10 border border-[#7B6CF6]/30 px-3 py-1 rounded-full">
+                      <span className="text-xs font-semibold text-[#7B6CF6] bg-[#7B6CF6]/10 border border-[#7B6CF6]/30 px-3 py-1 rounded-full flex-none">
                         {t('settings.active')}
                       </span>
                     )}
@@ -268,7 +289,7 @@ export function SettingsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+                        className="border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 flex-none"
                         onClick={() => handleSelectOrg(org.id)}
                       >
                         {t('settings.select')}

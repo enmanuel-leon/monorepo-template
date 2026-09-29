@@ -59,25 +59,21 @@ export function AppLayout() {
     },
   ];
 
-  const getNavClass = (path: string) => {
-    let isActive = false;
-    if (location.pathname === path) {
-      isActive = true;
-    }
+  const isPathActive = (path: string) => {
+    const isExactMatch = location.pathname === path;
+    const isSubPathMatch = path !== '/' && location.pathname.startsWith(path);
+    return isExactMatch || isSubPathMatch;
+  };
 
-    if (isActive) {
+  const getNavClass = (path: string) => {
+    if (isPathActive(path)) {
       return 'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold bg-[#7B6CF6]/15 text-[#7B6CF6] border border-[#7B6CF6]/30 dark:text-white';
     }
     return 'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/5 transition-colors';
   };
 
   const getMobileNavClass = (path: string) => {
-    let isActive = false;
-    if (location.pathname === path) {
-      isActive = true;
-    }
-
-    if (isActive) {
+    if (isPathActive(path)) {
       return 'flex-1 flex flex-col items-center gap-1 py-2 text-[10.5px] font-semibold text-[#7B6CF6]';
     }
     return 'flex-1 flex flex-col items-center gap-1 py-2 text-[10.5px] font-semibold text-slate-500 hover:text-slate-300';
@@ -124,7 +120,11 @@ export function AppLayout() {
               <Package className="h-4 w-4" />
               {t('common.items')}
             </Link>
-            <Link to="/settings" className={getNavClass('/settings')} data-tour="nav-settings">
+            <Link
+              to="/settings/profile"
+              className={getNavClass('/settings')}
+              data-tour="nav-settings"
+            >
               <Settings className="h-4 w-4" />
               {t('common.settings')}
             </Link>
@@ -211,7 +211,7 @@ export function AppLayout() {
           <Package className="h-4 w-4" />
           <span>{t('common.items')}</span>
         </Link>
-        <Link to="/settings" className={getMobileNavClass('/settings')}>
+        <Link to="/settings/profile" className={getMobileNavClass('/settings')}>
           <Settings className="h-4 w-4" />
           <span>{t('common.settings')}</span>
         </Link>

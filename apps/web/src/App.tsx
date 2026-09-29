@@ -120,7 +120,8 @@ export function App() {
           >
             <Route path="/" element={<HomePage />} />
             <Route path="/items" element={<ItemsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
+            <Route path="/settings/:tab" element={<SettingsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
