@@ -9,6 +9,8 @@ import { APP_NAME, AUTH_BASE_PATH } from '../config/constants.js';
 import { sendEmail } from '../services/email/email.service.js';
 import { logger } from '../config/logger.js';
 import { PASSWORD_POLICY } from '../constants/auth.constants.js';
+import { createNotification } from '../services/notification.service.js';
+import { NOTIFICATION_TYPES } from '../constants/notification.constants.js';
 
 function buildTrustedOrigins(): string[] {
   const origins = [env.BETTER_AUTH_URL];
@@ -59,6 +61,60 @@ function buildPlugins(): BetterAuthPlugin[] {
         </div>`;
 
         await sendEmail(data.email, subject, html);
+      },
+      organizationHooks: {
+        afterRemoveMember: async ({ member: _member, user, organization }) => {
+          logger.info(
+            { userId: user.id, orgName: organization.name },
+            'Member removed, creating in-app notification and sending email...',
+          );
+
+          let subject = `Has sido desvinculado de ${organization.name}`;
+          let notifTitle = `Desvinculado de ${organization.name}`;
+          let notifMessage = `Has sido dado de baja de la organización ${organization.name}.`;
+          if (user.locale === 'en') {
+            subject = `You have been removed from ${organization.name}`;
+            notifTitle = `Removed from ${organization.name}`;
+            notifMessage = `You have been removed from ${organization.name}.`;
+          }
+
+          try {
+            await createNotification({
+              userId: user.id,
+              type: NOTIFICATION_TYPES.ORGANIZATION_MEMBER_REMOVED,
+              title: notifTitle,
+              message: notifMessage,
+              metadata: {
+                organizationId: organization.id,
+                organizationName: organization.name,
+              },
+            });
+          } catch (err) {
+            logger.error({ err }, 'Failed to create in-app notification for removed member');
+          }
+
+          try {
+            const uniqueRef = Date.now().toString();
+            const html = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; background-color: #0f1117; border: 1px solid #1e2330; border-radius: 16px; padding: 32px; color: #f8fafc; text-align: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);">
+              <h2 style="color: #ffffff; font-size: 20px; font-weight: 700; margin: 0 0 16px;">${notifTitle}</h2>
+              <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
+                ${notifMessage}
+              </p>
+              <div style="margin: 24px 0;">
+                <a href="${primaryOrigin}/" style="background-color: #7B6CF6; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-block;">
+                  Ir al Panel Principal
+                </a>
+              </div>
+              <hr style="border: none; border-top: 1px solid #1e2330; margin: 24px 0 16px;" />
+              <p style="color: #64748b; font-size: 11px; margin: 0;">${APP_NAME} · Todos los derechos reservados.</p>
+              <div style="display: none; max-height: 0px; overflow: hidden; opacity: 0;">Ref: ${uniqueRef}</div>
+            </div>`;
+
+            await sendEmail(user.email, subject, html);
+          } catch (err) {
+            logger.error({ err }, 'Failed to send email to removed member');
+          }
+        },
       },
     }),
     passkey({

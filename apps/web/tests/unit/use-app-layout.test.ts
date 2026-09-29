@@ -1,9 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act } from 'react';
+import { toast } from 'sonner';
 import { renderHook, createTestQueryClient } from '../test-utils';
 import { useAppLayout } from '../../src/layouts/app-layout/use-app-layout';
 import { authClient } from '../../src/lib/auth-client';
 import * as apiClient from '../../src/lib/api-client';
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  },
+}));
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, options?: Record<string, unknown>) => {
+      let result = key;
+      if (options?.orgName) {
+        result = `${key}:${options.orgName}`;
+      }
+      return result;
+    },
+  }),
+}));
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', () => ({
@@ -440,5 +462,100 @@ describe('useAppLayout Hook Unit Tests', () => {
 
     expect(apiClient.apiFetch).toHaveBeenCalledWith('/api/v1/me');
     hook.unmount();
+  });
+
+  it('detects reactive membership loss, resets active organization, invalidates queries, and shows toast', async () => {
+    mockUseActiveOrganization.mockReturnValue({
+      data: { id: 'org-removed', name: 'Removed Org', slug: 'removed-org' },
+      isPending: false,
+      refetch: mockRefetchActiveOrg,
+    });
+    mockUseListOrganizations.mockReturnValue({
+      data: [{ id: 'org-other', name: 'Other Org', slug: 'other-org' }],
+      isPending: false,
+      refetch: mockRefetchUserOrgs,
+    });
+
+    const { hook, queryClient } = renderAppLayoutHook();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockSetActive).toHaveBeenCalledWith({ organizationId: null });
+    expect(invalidateSpy).toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith('notifications.removedFromOrgToast:Removed Org');
+    hook.unmount();
+  });
+
+  it('resets active organization and shows toast on auth:forbidden-organization event', async () => {
+    mockUseActiveOrganization.mockReturnValue({
+      data: { id: 'org-1', name: 'Active Org', slug: 'active-org' },
+      isPending: false,
+      refetch: mockRefetchActiveOrg,
+    });
+    mockUseListOrganizations.mockReturnValue({
+      data: [{ id: 'org-1', name: 'Active Org', slug: 'active-org' }],
+      isPending: false,
+      refetch: mockRefetchUserOrgs,
+    });
+
+    const { hook, queryClient } = renderAppLayoutHook();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await act(async () => {
+      window.dispatchEvent(
+        new CustomEvent('auth:forbidden-organization', {
+          detail: { status: 403, message: 'FORBIDDEN_ORGANIZATION_ACCESS' },
+        }),
+      );
+    });
+
+    expect(mockSetActive).toHaveBeenCalledWith({ organizationId: null });
+    expect(invalidateSpy).toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith('notifications.removedFromOrgToast:Active Org');
+    hook.unmount();
+  });
+
+  it('shows memberRemovedToast on auth:forbidden-organization event when activeOrg has no name', async () => {
+    mockUseActiveOrganization.mockReturnValue({
+      data: null,
+      isPending: false,
+      refetch: mockRefetchActiveOrg,
+    });
+    mockUseListOrganizations.mockReturnValue({
+      data: [],
+      isPending: false,
+      refetch: mockRefetchUserOrgs,
+    });
+
+    const { hook, queryClient } = renderAppLayoutHook();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await act(async () => {
+      window.dispatchEvent(
+        new CustomEvent('auth:forbidden-organization', {
+          detail: { status: 403, message: 'FORBIDDEN_ORGANIZATION_ACCESS' },
+        }),
+      );
+    });
+
+    expect(mockSetActive).toHaveBeenCalledWith({ organizationId: null });
+    expect(invalidateSpy).toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith('notifications.memberRemovedToast');
+    hook.unmount();
+  });
+
+  it('cleans up auth:forbidden-organization event listener on unmount', () => {
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+    const { hook } = renderAppLayoutHook();
+
+    hook.unmount();
+
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'auth:forbidden-organization',
+      expect.any(Function),
+    );
   });
 });

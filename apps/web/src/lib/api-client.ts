@@ -7,27 +7,43 @@ export function getApiUrl(path: string): string {
   return `${BASE_URL}${path}`;
 }
 
-export async function apiFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
-  const url = getApiUrl(path);
-
-  const requestHeaders: Record<string, string> = {};
+function buildRequestHeaders(init?: RequestInit): Record<string, string> {
+  const headers: Record<string, string> = {};
   if (init?.body !== undefined && init?.body !== null) {
-    requestHeaders['Content-Type'] = 'application/json';
+    headers['Content-Type'] = 'application/json';
   }
-
   if (init?.headers) {
     if (Array.isArray(init.headers)) {
       for (const [key, value] of init.headers) {
-        requestHeaders[key] = value;
+        headers[key] = value;
       }
     } else if (typeof (init.headers as Headers).forEach === 'function') {
       (init.headers as Headers).forEach((value, key) => {
-        requestHeaders[key] = value;
+        headers[key] = value;
       });
     } else {
-      Object.assign(requestHeaders, init.headers);
+      Object.assign(headers, init.headers);
     }
   }
+  return headers;
+}
+
+function notifyForbiddenOrganization(status: number, message: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  if (status === 403 || message.includes('FORBIDDEN_ORGANIZATION_ACCESS')) {
+    window.dispatchEvent(
+      new CustomEvent('auth:forbidden-organization', {
+        detail: { status, message },
+      }),
+    );
+  }
+}
+
+export async function apiFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
+  const url = getApiUrl(path);
+  const requestHeaders = buildRequestHeaders(init);
 
   const response = await fetch(url, {
     ...init,
@@ -41,6 +57,7 @@ export async function apiFetch<T = unknown>(path: string, init?: RequestInit): P
     if (errorBody.message) {
       errorMessage = errorBody.message;
     }
+    notifyForbiddenOrganization(response.status, errorMessage);
     throw new Error(errorMessage);
   }
 

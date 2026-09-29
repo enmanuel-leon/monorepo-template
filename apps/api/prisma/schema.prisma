@@ -34,6 +34,7 @@ model User {
   members          Member[]
   invitations      Invitation[]
   items            Item[]
+  notifications    Notification[]
   country          Country?       @relation(fields: [countryCode], references: [code], onDelete: SetNull)
   timezone         Timezone?      @relation(fields: [timezoneId], references: [id], onDelete: SetNull)
 
@@ -210,4 +211,20 @@ model Item {
   @@index([userId])
   @@index([organizationId])
   @@map("item")
+}
+
+model Notification {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      String   @db.VarChar(50)
+  title     String   @db.VarChar(200)
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notification")
 }

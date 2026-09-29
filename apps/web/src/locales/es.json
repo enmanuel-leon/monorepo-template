@@ -226,7 +226,15 @@
     "reviewBtn": "Ver Invitación",
     "refresh": "Actualizar notificaciones",
     "newBadge": "Nueva",
-    "unreadCount": "{{count}} pendientes"
+    "unreadCount": "{{count}} pendientes",
+    "markAllAsRead": "Marcar todas como leídas",
+    "markAsRead": "Marcar como leída",
+    "systemAlertsTab": "Alertas",
+    "invitationsTab": "Invitaciones",
+    "allTab": "Todas",
+    "memberRemovedTitle": "Desvinculado de la Organización",
+    "removedFromOrgToast": "Tu acceso a {{orgName}} ha sido revocado. Has sido redirigido a tu espacio personal.",
+    "memberRemovedToast": "Has sido dado de baja de esta organización."
   },
   "invitationModal": {
     "title": "Invitación a Organización",

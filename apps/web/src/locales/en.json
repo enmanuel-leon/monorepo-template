@@ -226,7 +226,15 @@
     "reviewBtn": "Review Invitation",
     "refresh": "Refresh notifications",
     "newBadge": "New",
-    "unreadCount": "{{count}} pending"
+    "unreadCount": "{{count}} pending",
+    "markAllAsRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "systemAlertsTab": "Alerts",
+    "invitationsTab": "Invitations",
+    "allTab": "All",
+    "memberRemovedTitle": "Removed from Organization",
+    "removedFromOrgToast": "Your access to {{orgName}} was removed. Switched to personal workspace.",
+    "memberRemovedToast": "You have been removed from this organization."
   },
   "invitationModal": {
     "title": "Organization Invitation",

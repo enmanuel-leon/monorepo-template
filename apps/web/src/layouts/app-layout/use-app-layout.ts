@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { authClient } from '../../lib/auth-client';
 import { apiFetch } from '../../lib/api-client';
 import { useLocaleStore } from '../../stores/locale.store';
@@ -36,6 +38,7 @@ interface UserProfileResponse {
 }
 
 export function useAppLayout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const session = authClient.useSession();
@@ -47,6 +50,52 @@ export function useAppLayout() {
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [selectedInvitation, setSelectedInvitation] = useState<InvitationData | null>(null);
   const hasTriggeredTourRef = useRef(false);
+  const isResettingOrgRef = useRef(false);
+
+  useEffect(() => {
+    async function handleForbiddenOrg() {
+      let activeOrgName = '';
+      if (activeOrg.data?.name) {
+        activeOrgName = activeOrg.data.name;
+      }
+      await authClient.organization.setActive({ organizationId: null });
+      await queryClient.invalidateQueries();
+      if (activeOrgName) {
+        toast.error(t('notifications.removedFromOrgToast', { orgName: activeOrgName }));
+      } else {
+        toast.error(t('notifications.memberRemovedToast'));
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:forbidden-organization', handleForbiddenOrg);
+    }
+
+    const currentActiveOrg = activeOrg.data;
+    if (currentActiveOrg?.id && Array.isArray(userOrgs.data)) {
+      const activeOrgId = currentActiveOrg.id;
+      const isStillMember = userOrgs.data.some((org) => org.id === activeOrgId);
+      if (!isStillMember && !isResettingOrgRef.current) {
+        isResettingOrgRef.current = true;
+        const activeOrgName = currentActiveOrg.name || '';
+        void (async () => {
+          try {
+            await authClient.organization.setActive({ organizationId: null });
+            await queryClient.invalidateQueries();
+            toast.error(t('notifications.removedFromOrgToast', { orgName: activeOrgName }));
+          } finally {
+            isResettingOrgRef.current = false;
+          }
+        })();
+      }
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('auth:forbidden-organization', handleForbiddenOrg);
+      }
+    };
+  }, [activeOrg.data?.id, activeOrg.data?.name, userOrgs.data, queryClient, t]);
 
   const profileQuery = useQuery<UserProfileResponse>({
     queryKey: ['current-user-profile'],

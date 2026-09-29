@@ -115,4 +115,40 @@ describe('Frontend API Client', () => {
 
     await expect(apiFetch('/api/v1/items')).rejects.toThrow('HTTP error 500');
   });
+
+  it('dispatches auth:forbidden-organization event when status is 403', async () => {
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({ message: 'Access denied' }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    await expect(apiFetch('/api/v1/items')).rejects.toThrow('Access denied');
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'auth:forbidden-organization',
+        detail: { status: 403, message: 'Access denied' },
+      }),
+    );
+  });
+
+  it('dispatches auth:forbidden-organization event when errorMessage contains FORBIDDEN_ORGANIZATION_ACCESS', async () => {
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ message: 'FORBIDDEN_ORGANIZATION_ACCESS' }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    await expect(apiFetch('/api/v1/items')).rejects.toThrow('FORBIDDEN_ORGANIZATION_ACCESS');
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'auth:forbidden-organization',
+        detail: { status: 400, message: 'FORBIDDEN_ORGANIZATION_ACCESS' },
+      }),
+    );
+  });
 });
