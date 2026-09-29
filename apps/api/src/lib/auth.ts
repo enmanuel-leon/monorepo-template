@@ -49,7 +49,7 @@ function buildPlugins(): BetterAuthPlugin[] {
             Has recibido una invitación para unirte a la organización <strong>${data.organization.name}</strong> con el rol de <strong>${data.role}</strong>.
           </p>
           <div style="margin: 24px 0;">
-            <a href="${env.BETTER_AUTH_URL}/select-organization" style="background-color: #7B6CF6; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-block;">
+            <a href="${primaryOrigin}/select-organization" style="background-color: #7B6CF6; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-block;">
               Ver y Aceptar Invitación
             </a>
           </div>

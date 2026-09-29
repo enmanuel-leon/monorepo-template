@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { auth } from '../lib/auth.js';
+import { prisma } from '../lib/prisma.js';
 import {
   listUserOrganizations,
   createOrganizationForUser,
@@ -22,6 +23,23 @@ export async function createOrganization(
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) {
     return reply.status(401).send({ message: 'Unauthorized' });
+  }
+
+  const existingOwner = await prisma.member.findFirst({
+    where: {
+      userId: session.user.id,
+      role: 'owner',
+    },
+  });
+
+  if (existingOwner) {
+    return reply.status(403).send({
+      error: {
+        code: 'OWNER_LIMIT_REACHED',
+        message: 'You are already the owner of an organization.',
+        statusCode: 403,
+      },
+    });
   }
 
   const org = await createOrganizationForUser(

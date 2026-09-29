@@ -9,6 +9,16 @@ describe('Organization API', () => {
     app = await buildApp();
   });
 
+  function resolveCookieHeader(setCookie: string | string[] | undefined): string {
+    if (Array.isArray(setCookie)) {
+      return setCookie.join('; ');
+    }
+    if (setCookie) {
+      return setCookie;
+    }
+    return '';
+  }
+
   it('rejects unauthenticated request to /api/v1/organizations', async () => {
     const response = await app.inject({
       method: 'GET',
@@ -18,7 +28,7 @@ describe('Organization API', () => {
     expect(response.statusCode).toBe(401);
   });
 
-  it('creates and lists organizations for authenticated user', async () => {
+  it('creates and lists organizations for authenticated user, and enforces owner limit', async () => {
     const email = `org-test-${Date.now()}@example.com`;
     const password = 'TestPassword123!';
 
@@ -30,7 +40,7 @@ describe('Organization API', () => {
     });
 
     const setCookie = signUpRes.headers['set-cookie'];
-    const cookieHeader = Array.isArray(setCookie) ? setCookie.join('; ') : setCookie || '';
+    const cookieHeader = resolveCookieHeader(setCookie);
 
     // Create organization
     const createRes = await app.inject({
@@ -47,6 +57,24 @@ describe('Organization API', () => {
     });
 
     expect(createRes.statusCode).toBe(201);
+
+    // Attempt second organization creation while already owner -> 403 Forbidden
+    const secondCreateRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/organizations',
+      headers: {
+        'content-type': 'application/json',
+        cookie: cookieHeader,
+      },
+      payload: {
+        name: 'Second Forbidden Corp',
+        slug: `forbidden-${Date.now()}`,
+      },
+    });
+
+    expect(secondCreateRes.statusCode).toBe(403);
+    const errorBody = JSON.parse(secondCreateRes.payload);
+    expect(errorBody.error.code).toBe('OWNER_LIMIT_REACHED');
 
     // List organizations
     const listRes = await app.inject({

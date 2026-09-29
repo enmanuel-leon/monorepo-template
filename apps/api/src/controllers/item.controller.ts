@@ -26,14 +26,27 @@ export async function postItem(
     return reply.status(401).send({ message: 'Unauthorized' });
   }
 
-  const item = await createItem({
-    title: request.body.title,
-    description: request.body.description,
-    userId: session.user.id,
-    organizationId: request.body.organizationId,
-  });
+  try {
+    const item = await createItem({
+      title: request.body.title,
+      description: request.body.description,
+      userId: session.user.id,
+      organizationId: request.body.organizationId,
+    });
 
-  return reply.status(201).send(item);
+    return reply.status(201).send(item);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === 'FORBIDDEN_ORGANIZATION_ACCESS') {
+      return reply.status(403).send({
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You are not a member of the specified organization.',
+          statusCode: 403,
+        },
+      });
+    }
+    throw err;
+  }
 }
 
 export async function removeItem(
@@ -45,6 +58,27 @@ export async function removeItem(
     return reply.status(401).send({ message: 'Unauthorized' });
   }
 
-  await deleteItem(request.params.id, session.user.id);
+  const result = await deleteItem(request.params.id, session.user.id);
+
+  if (result.notFound) {
+    return reply.status(404).send({
+      error: {
+        code: 'RECORD_NOT_FOUND',
+        message: 'Item not found.',
+        statusCode: 404,
+      },
+    });
+  }
+
+  if (result.forbidden) {
+    return reply.status(403).send({
+      error: {
+        code: 'FORBIDDEN',
+        message: 'You do not have permission to delete this item.',
+        statusCode: 403,
+      },
+    });
+  }
+
   return reply.send({ success: true });
 }

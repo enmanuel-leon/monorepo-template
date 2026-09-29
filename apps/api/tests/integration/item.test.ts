@@ -61,7 +61,7 @@ describe('Item API Integration Tests', () => {
     const setCookie = signUpRes.headers['set-cookie'];
     const cookieHeader = resolveCookieHeader(setCookie);
 
-    // 1. Create item
+    // 1. Create personal item
     const createRes = await app.inject({
       method: 'POST',
       url: '/api/v1/items',
@@ -94,7 +94,17 @@ describe('Item API Integration Tests', () => {
     expect(Array.isArray(items)).toBe(true);
     expect(items.some((i: { id: string }) => i.id === createdItem.id)).toBe(true);
 
-    // 3. Delete item
+    // 3. Delete non-existent item returns 404
+    const notFoundRes = await app.inject({
+      method: 'DELETE',
+      url: '/api/v1/items/00000000-0000-0000-0000-000000000000',
+      headers: {
+        cookie: cookieHeader,
+      },
+    });
+    expect(notFoundRes.statusCode).toBe(404);
+
+    // 4. Delete personal item successfully
     const deleteRes = await app.inject({
       method: 'DELETE',
       url: `/api/v1/items/${createdItem.id}`,
@@ -106,5 +116,89 @@ describe('Item API Integration Tests', () => {
     expect(deleteRes.statusCode).toBe(200);
     const deleteBody = JSON.parse(deleteRes.payload);
     expect(deleteBody.success).toBe(true);
+  });
+
+  it('enforces multitenancy isolation on item creation, listing, and deletion', async () => {
+    // 1. Create User A (Owner of Org A)
+    const emailA = `org-owner-${Date.now()}@example.com`;
+    const password = 'TestPassword123!';
+    const userARes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/sign-up/email',
+      headers: { 'content-type': 'application/json' },
+      payload: { email: emailA, password, name: 'User A' },
+    });
+    const cookieA = resolveCookieHeader(userARes.headers['set-cookie']);
+
+    const orgRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/organizations',
+      headers: {
+        'content-type': 'application/json',
+        cookie: cookieA,
+      },
+      payload: { name: 'Tenant Alpha', slug: `tenant-alpha-${Date.now()}` },
+    });
+    expect(orgRes.statusCode).toBe(201);
+    const org = JSON.parse(orgRes.payload);
+
+    // 2. User A creates item in Tenant Alpha
+    const itemRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/items',
+      headers: {
+        'content-type': 'application/json',
+        cookie: cookieA,
+      },
+      payload: {
+        title: 'Alpha Secret Document',
+        organizationId: org.id,
+      },
+    });
+    expect(itemRes.statusCode).toBe(201);
+    const alphaItem = JSON.parse(itemRes.payload);
+
+    // 3. Create User B (Outsider - not in Tenant Alpha)
+    const emailB = `org-outsider-${Date.now()}@example.com`;
+    const userBRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/sign-up/email',
+      headers: { 'content-type': 'application/json' },
+      payload: { email: emailB, password, name: 'User B' },
+    });
+    const cookieB = resolveCookieHeader(userBRes.headers['set-cookie']);
+
+    // User B tries to query Tenant Alpha's items -> returns empty array
+    const listOutsiderRes = await app.inject({
+      method: 'GET',
+      url: `/api/v1/items?organizationId=${org.id}`,
+      headers: { cookie: cookieB },
+    });
+    expect(listOutsiderRes.statusCode).toBe(200);
+    const outsiderItems = JSON.parse(listOutsiderRes.payload);
+    expect(outsiderItems).toEqual([]);
+
+    // User B tries to delete User A's organization item -> returns 403 Forbidden
+    const deleteOutsiderRes = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/items/${alphaItem.id}`,
+      headers: { cookie: cookieB },
+    });
+    expect(deleteOutsiderRes.statusCode).toBe(403);
+
+    // User B tries to create item in Tenant Alpha -> returns 403 Forbidden
+    const createOutsiderRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/items',
+      headers: {
+        'content-type': 'application/json',
+        cookie: cookieB,
+      },
+      payload: {
+        title: 'Injected Item',
+        organizationId: org.id,
+      },
+    });
+    expect(createOutsiderRes.statusCode).toBe(403);
   });
 });
