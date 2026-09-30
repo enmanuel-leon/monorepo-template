@@ -185,6 +185,46 @@ describe('useHomePage Hook Unit Tests', () => {
     hook.unmount();
   });
 
+  it('falls back to sessionActiveOrgId when activeOrg.data is null and matches user organization', async () => {
+    vi.mocked(authClient.useSession).mockReturnValue({
+      data: {
+        user: { id: 'u-1', name: 'John Doe', email: 'john@example.com' },
+        session: { activeOrganizationId: 'org-session-2' },
+      },
+      isPending: false,
+    } as unknown as ReturnType<typeof authClient.useSession>);
+
+    vi.mocked(authClient.useActiveOrganization).mockReturnValue({
+      data: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof authClient.useActiveOrganization>);
+
+    vi.mocked(authClient.useListOrganizations).mockReturnValue({
+      data: [
+        { id: 'org-fallback-1', name: 'Fallback Org', slug: 'fallback-org' },
+        { id: 'org-session-2', name: 'Session Org', slug: 'session-org' },
+      ],
+      isPending: false,
+    } as unknown as ReturnType<typeof authClient.useListOrganizations>);
+
+    const fetchSpy = vi.spyOn(apiClient, 'apiFetch').mockResolvedValue({
+      metrics: mockMetrics,
+    });
+
+    const hook = renderHook(() => useHomePage(), createTestQueryClient());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    });
+
+    expect(fetchSpy).toHaveBeenCalledWith('/api/v1/metrics/summary?organizationId=org-session-2');
+    expect(hook.current.organization?.name).toBe('Session Org');
+    expect(hook.current.organization?.id).toBe('org-session-2');
+    expect(hook.current.metrics).toEqual(mockMetrics);
+
+    hook.unmount();
+  });
+
   it('handles handleRefresh and refetches metrics', async () => {
     vi.mocked(authClient.useSession).mockReturnValue({
       data: { user: { id: 'u-1', name: 'John Doe', email: 'john@example.com' } },

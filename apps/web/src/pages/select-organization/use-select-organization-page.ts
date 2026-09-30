@@ -109,7 +109,12 @@ export function useSelectOrganizationPage() {
 
       await authClient.getSession({ query: { disableCookieCache: true } });
       await queryClient.invalidateQueries();
-      navigate('/', { replace: true });
+      setSelectingOrgId(null);
+      if (typeof window !== 'undefined' && window.location && process.env.NODE_ENV !== 'test') {
+        window.location.href = '/';
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch {
       toast.error(t('settings.organizationSelectError'));
       setSelectingOrgId(null);
@@ -149,7 +154,11 @@ export function useSelectOrganizationPage() {
     setIsSubmitting(false);
     setIsModalOpen(false);
     toast.success(t('settings.organizationCreated'));
-    navigate('/', { replace: true });
+    if (typeof window !== 'undefined' && window.location && process.env.NODE_ENV !== 'test') {
+      window.location.href = '/';
+    } else {
+      navigate('/', { replace: true });
+    }
   }
 
   function openInvitationModal(invitation: InvitationData) {
@@ -164,7 +173,11 @@ export function useSelectOrganizationPage() {
     await queryClient.invalidateQueries();
     await orgsQuery.refetch();
     await invitationsQuery.refetch();
-    navigate('/', { replace: true });
+    if (typeof window !== 'undefined' && window.location && process.env.NODE_ENV !== 'test') {
+      window.location.href = '/';
+    } else {
+      navigate('/', { replace: true });
+    }
   }
 
   async function handleModalDeclined(_invitationId: string) {
@@ -175,7 +188,11 @@ export function useSelectOrganizationPage() {
   async function handleSignOut() {
     queryClient.clear();
     await authClient.signOut();
-    navigate('/login', { replace: true });
+    if (typeof window !== 'undefined' && window.location && process.env.NODE_ENV !== 'test') {
+      window.location.href = '/login';
+    } else {
+      navigate('/login', { replace: true });
+    }
   }
 
   return {

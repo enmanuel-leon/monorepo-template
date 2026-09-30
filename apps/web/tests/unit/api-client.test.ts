@@ -116,7 +116,7 @@ describe('Frontend API Client', () => {
     await expect(apiFetch('/api/v1/items')).rejects.toThrow('HTTP error 500');
   });
 
-  it('dispatches auth:forbidden-organization event when status is 403', async () => {
+  it('does not dispatch auth:forbidden-organization event on regular 403 without FORBIDDEN_ORGANIZATION_ACCESS', async () => {
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,
@@ -126,12 +126,7 @@ describe('Frontend API Client', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     await expect(apiFetch('/api/v1/items')).rejects.toThrow('Access denied');
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'auth:forbidden-organization',
-        detail: { status: 403, message: 'Access denied' },
-      }),
-    );
+    expect(dispatchSpy).not.toHaveBeenCalled();
   });
 
   it('dispatches auth:forbidden-organization event when errorMessage contains FORBIDDEN_ORGANIZATION_ACCESS', async () => {
@@ -148,6 +143,68 @@ describe('Frontend API Client', () => {
       expect.objectContaining({
         type: 'auth:forbidden-organization',
         detail: { status: 400, message: 'FORBIDDEN_ORGANIZATION_ACCESS' },
+      }),
+    );
+  });
+
+  it('dispatches auth:forbidden-organization when nested error has code FORBIDDEN_ORGANIZATION_ACCESS', async () => {
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({
+        error: {
+          code: 'FORBIDDEN_ORGANIZATION_ACCESS',
+          message: 'You are not a member of the specified organization.',
+          statusCode: 403,
+        },
+        code: 'FORBIDDEN_ORGANIZATION_ACCESS',
+        message: 'You are not a member of the specified organization.',
+      }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    await expect(apiFetch('/api/v1/items')).rejects.toThrow(
+      'You are not a member of the specified organization.',
+    );
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'auth:forbidden-organization',
+        detail: {
+          status: 403,
+          message: 'You are not a member of the specified organization.',
+          code: 'FORBIDDEN_ORGANIZATION_ACCESS',
+        },
+      }),
+    );
+  });
+
+  it('dispatches auth:forbidden-organization on 403 with membership error message in nested error object', async () => {
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You are not a member of the specified organization.',
+          statusCode: 403,
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    await expect(apiFetch('/api/v1/items')).rejects.toThrow(
+      'You are not a member of the specified organization.',
+    );
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'auth:forbidden-organization',
+        detail: {
+          status: 403,
+          message: 'You are not a member of the specified organization.',
+          code: 'FORBIDDEN',
+        },
       }),
     );
   });

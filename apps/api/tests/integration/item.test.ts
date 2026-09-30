@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../../src/app.js';
+import { AUTH_ERROR_CODES } from '../../src/constants/auth.constants.js';
 
 describe('Item API Integration Tests', () => {
   let app: FastifyInstance;
@@ -185,6 +186,9 @@ describe('Item API Integration Tests', () => {
       headers: { cookie: cookieB },
     });
     expect(deleteOutsiderRes.statusCode).toBe(403);
+    const deleteOutsiderBody = JSON.parse(deleteOutsiderRes.payload);
+    expect(deleteOutsiderBody.error.code).toBe(AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS);
+    expect(deleteOutsiderBody.code).toBe(AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS);
 
     // User B tries to create item in Tenant Alpha -> returns 403 Forbidden
     const createOutsiderRes = await app.inject({
@@ -200,5 +204,8 @@ describe('Item API Integration Tests', () => {
       },
     });
     expect(createOutsiderRes.statusCode).toBe(403);
+    const createOutsiderBody = JSON.parse(createOutsiderRes.payload);
+    expect(createOutsiderBody.error.code).toBe(AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS);
+    expect(createOutsiderBody.code).toBe(AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS);
   });
 });

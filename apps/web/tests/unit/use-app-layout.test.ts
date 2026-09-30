@@ -142,6 +142,27 @@ describe('useAppLayout Hook Unit Tests', () => {
     hook.unmount();
   });
 
+  it('falls back to sessionActiveOrgId when activeOrg.data is null and matches user organization', () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: { id: 'u-1', name: 'John Doe', email: 'john@example.com' },
+        session: { activeOrganizationId: 'org-2' },
+      },
+      isPending: false,
+    });
+    mockUseActiveOrganization.mockReturnValue({
+      data: null,
+      isPending: false,
+      refetch: mockRefetchActiveOrg,
+    });
+
+    const { hook } = renderAppLayoutHook();
+
+    expect(hook.current.organization?.id).toBe('org-2');
+    expect(hook.current.organization?.name).toBe('Second Org');
+    hook.unmount();
+  });
+
   it('returns null organization when activeOrg is null and userOrgs is empty', () => {
     mockUseActiveOrganization.mockReturnValue({
       data: null,
@@ -487,75 +508,5 @@ describe('useAppLayout Hook Unit Tests', () => {
     expect(invalidateSpy).toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledWith('notifications.removedFromOrgToast:Removed Org');
     hook.unmount();
-  });
-
-  it('resets active organization and shows toast on auth:forbidden-organization event', async () => {
-    mockUseActiveOrganization.mockReturnValue({
-      data: { id: 'org-1', name: 'Active Org', slug: 'active-org' },
-      isPending: false,
-      refetch: mockRefetchActiveOrg,
-    });
-    mockUseListOrganizations.mockReturnValue({
-      data: [{ id: 'org-1', name: 'Active Org', slug: 'active-org' }],
-      isPending: false,
-      refetch: mockRefetchUserOrgs,
-    });
-
-    const { hook, queryClient } = renderAppLayoutHook();
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-    await act(async () => {
-      window.dispatchEvent(
-        new CustomEvent('auth:forbidden-organization', {
-          detail: { status: 403, message: 'FORBIDDEN_ORGANIZATION_ACCESS' },
-        }),
-      );
-    });
-
-    expect(mockSetActive).toHaveBeenCalledWith({ organizationId: null });
-    expect(invalidateSpy).toHaveBeenCalled();
-    expect(toast.error).toHaveBeenCalledWith('notifications.removedFromOrgToast:Active Org');
-    hook.unmount();
-  });
-
-  it('shows memberRemovedToast on auth:forbidden-organization event when activeOrg has no name', async () => {
-    mockUseActiveOrganization.mockReturnValue({
-      data: null,
-      isPending: false,
-      refetch: mockRefetchActiveOrg,
-    });
-    mockUseListOrganizations.mockReturnValue({
-      data: [],
-      isPending: false,
-      refetch: mockRefetchUserOrgs,
-    });
-
-    const { hook, queryClient } = renderAppLayoutHook();
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-    await act(async () => {
-      window.dispatchEvent(
-        new CustomEvent('auth:forbidden-organization', {
-          detail: { status: 403, message: 'FORBIDDEN_ORGANIZATION_ACCESS' },
-        }),
-      );
-    });
-
-    expect(mockSetActive).toHaveBeenCalledWith({ organizationId: null });
-    expect(invalidateSpy).toHaveBeenCalled();
-    expect(toast.error).toHaveBeenCalledWith('notifications.memberRemovedToast');
-    hook.unmount();
-  });
-
-  it('cleans up auth:forbidden-organization event listener on unmount', () => {
-    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-    const { hook } = renderAppLayoutHook();
-
-    hook.unmount();
-
-    expect(removeEventListenerSpy).toHaveBeenCalledWith(
-      'auth:forbidden-organization',
-      expect.any(Function),
-    );
   });
 });

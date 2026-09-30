@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { auth } from '../lib/auth.js';
 import { listItems, createItem, deleteItem } from '../services/item.service.js';
+import { AUTH_ERROR_CODES } from '../constants/auth.constants.js';
 
 export async function getItems(
   request: FastifyRequest<{ Querystring: { organizationId?: string } }>,
@@ -36,13 +37,15 @@ export async function postItem(
 
     return reply.status(201).send(item);
   } catch (err: unknown) {
-    if (err instanceof Error && err.message === 'FORBIDDEN_ORGANIZATION_ACCESS') {
+    if (err instanceof Error && err.message === AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS) {
       return reply.status(403).send({
         error: {
-          code: 'FORBIDDEN',
+          code: AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS,
           message: 'You are not a member of the specified organization.',
           statusCode: 403,
         },
+        code: AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS,
+        message: 'You are not a member of the specified organization.',
       });
     }
     throw err;
@@ -73,10 +76,12 @@ export async function removeItem(
   if (result.forbidden) {
     return reply.status(403).send({
       error: {
-        code: 'FORBIDDEN',
+        code: AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS,
         message: 'You do not have permission to delete this item.',
         statusCode: 403,
       },
+      code: AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS,
+      message: 'You do not have permission to delete this item.',
     });
   }
 

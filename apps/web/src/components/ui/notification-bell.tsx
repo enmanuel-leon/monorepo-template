@@ -193,11 +193,15 @@ export function NotificationBell({ onOpenInvitation }: Readonly<NotificationBell
   } = useQuery<UserInvitationDto[]>({
     queryKey: ['user-invitations'],
     queryFn: async () => {
-      const res = await authClient.organization.listUserInvitations();
-      if (res.error || !res.data) {
+      try {
+        const res = await authClient.organization.listUserInvitations();
+        if (res.error || !res.data || !Array.isArray(res.data)) {
+          return [];
+        }
+        return res.data as unknown as UserInvitationDto[];
+      } catch {
         return [];
       }
-      return res.data as unknown as UserInvitationDto[];
     },
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
@@ -207,16 +211,36 @@ export function NotificationBell({ onOpenInvitation }: Readonly<NotificationBell
   const notificationsQuery = useQuery<NotificationsResponse>({
     queryKey: ['user-system-notifications'],
     queryFn: async () => {
-      return apiFetch<NotificationsResponse>('/api/v1/notifications?pageSize=20');
+      try {
+        return await apiFetch<NotificationsResponse>('/api/v1/notifications?pageSize=20');
+      } catch {
+        return {
+          data: [],
+          pagination: { total: 0, page: 1, pageSize: 20, totalPages: 1 },
+          unreadCount: 0,
+        };
+      }
     },
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
 
-  const systemNotifications = notificationsQuery.data?.data || [];
-  const systemUnread = notificationsQuery.data?.unreadCount || 0;
-  const totalUnread = invitations.length + systemUnread;
+  let safeInvitations: UserInvitationDto[] = [];
+  if (Array.isArray(invitations)) {
+    safeInvitations = invitations;
+  }
+
+  let safeNotifications: SystemNotificationDto[] = [];
+  if (notificationsQuery.data?.data && Array.isArray(notificationsQuery.data.data)) {
+    safeNotifications = notificationsQuery.data.data;
+  }
+
+  let systemUnread = 0;
+  if (notificationsQuery.data?.unreadCount) {
+    systemUnread = notificationsQuery.data.unreadCount;
+  }
+  const totalUnread = safeInvitations.length + systemUnread;
   const hasUnread = totalUnread > 0;
   const countLabel = totalUnread.toString();
 
@@ -297,7 +321,7 @@ export function NotificationBell({ onOpenInvitation }: Readonly<NotificationBell
   const displayItems: UnifiedItem[] = [];
 
   if (activeTab === 'all' || activeTab === 'invitations') {
-    for (const inv of invitations) {
+    for (const inv of safeInvitations) {
       displayItems.push({
         kind: 'invitation',
         id: `inv-${inv.id}`,
@@ -308,7 +332,7 @@ export function NotificationBell({ onOpenInvitation }: Readonly<NotificationBell
   }
 
   if (activeTab === 'all' || activeTab === 'alerts') {
-    for (const notif of systemNotifications) {
+    for (const notif of safeNotifications) {
       displayItems.push({
         kind: 'system',
         id: `notif-${notif.id}`,

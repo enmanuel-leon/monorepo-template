@@ -5,6 +5,14 @@ import { authClient } from '../../lib/auth-client';
 import { useLocaleStore } from '../../stores/locale.store';
 import { LOCALES } from '../../constants/locale.constants';
 
+function navigateToHome(navigate: (path: string) => void): void {
+  if (typeof window !== 'undefined' && window.location && process.env.NODE_ENV !== 'test') {
+    window.location.href = '/';
+  } else {
+    navigate('/');
+  }
+}
+
 export function useLoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -149,7 +157,7 @@ export function useLoginPage() {
     }
 
     setLoading(false);
-    navigate('/');
+    navigateToHome(navigate);
   }
 
   async function handleVerifyOtp(e: SyntheticEvent<HTMLFormElement>) {

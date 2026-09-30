@@ -11,6 +11,7 @@ import { OnboardingPage } from './pages/onboarding';
 import { SelectOrganizationPage } from './pages/select-organization';
 import { SettingsPage } from './pages/settings';
 import { ItemsPage } from './pages/items';
+import { GlobalForbiddenHandler } from './components/global-forbidden-handler';
 import { authClient } from './lib/auth-client';
 import './lib/i18n';
 import { Toaster } from 'sonner';
@@ -67,12 +68,25 @@ function ProtectedRoute({ children, allowNoOrg = false }: Readonly<ProtectedRout
   }
 
   if (!allowNoOrg) {
-    const orgs = userOrgs.data || [];
+    if (!userOrgs.data || userOrgs.isPending) {
+      return (
+        <div className="flex h-screen items-center justify-center bg-[#08090B] text-slate-400 text-sm">
+          Loading...
+        </div>
+      );
+    }
+
+    const orgs = userOrgs.data;
     if (orgs.length === 0) {
       return <Navigate to="/onboarding" replace />;
     }
 
-    if (!activeOrg.data && orgs.length > 1) {
+    const sessionActiveOrgId = (
+      session.data?.session as { activeOrganizationId?: string | null } | undefined
+    )?.activeOrganizationId;
+    const hasActiveOrg = Boolean(activeOrg.data || sessionActiveOrgId);
+
+    if (!hasActiveOrg && orgs.length > 1) {
       return <Navigate to="/select-organization" replace />;
     }
   }
@@ -85,6 +99,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-right" richColors closeButton duration={4000} />
       <BrowserRouter>
+        <GlobalForbiddenHandler />
         <Routes>
           {/* Public Auth Routes */}
           <Route element={<AuthLayout />}>

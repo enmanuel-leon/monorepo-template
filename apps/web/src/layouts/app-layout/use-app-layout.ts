@@ -53,26 +53,13 @@ export function useAppLayout() {
   const isResettingOrgRef = useRef(false);
 
   useEffect(() => {
-    async function handleForbiddenOrg() {
-      let activeOrgName = '';
-      if (activeOrg.data?.name) {
-        activeOrgName = activeOrg.data.name;
-      }
-      await authClient.organization.setActive({ organizationId: null });
-      await queryClient.invalidateQueries();
-      if (activeOrgName) {
-        toast.error(t('notifications.removedFromOrgToast', { orgName: activeOrgName }));
-      } else {
-        toast.error(t('notifications.memberRemovedToast'));
-      }
-    }
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('auth:forbidden-organization', handleForbiddenOrg);
-    }
-
     const currentActiveOrg = activeOrg.data;
-    if (currentActiveOrg?.id && Array.isArray(userOrgs.data)) {
+    if (
+      currentActiveOrg?.id &&
+      Array.isArray(userOrgs.data) &&
+      userOrgs.data.length > 0 &&
+      !userOrgs.isPending
+    ) {
       const activeOrgId = currentActiveOrg.id;
       const isStillMember = userOrgs.data.some((org) => org.id === activeOrgId);
       if (!isStillMember && !isResettingOrgRef.current) {
@@ -89,13 +76,7 @@ export function useAppLayout() {
         })();
       }
     }
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('auth:forbidden-organization', handleForbiddenOrg);
-      }
-    };
-  }, [activeOrg.data?.id, activeOrg.data?.name, userOrgs.data, queryClient, t]);
+  }, [activeOrg.data?.id, activeOrg.data?.name, userOrgs.data, userOrgs.isPending, queryClient, t]);
 
   const profileQuery = useQuery<UserProfileResponse>({
     queryKey: ['current-user-profile'],
@@ -170,7 +151,11 @@ export function useAppLayout() {
   async function handleSignOut() {
     queryClient.clear();
     await authClient.signOut();
-    navigate('/login');
+    if (typeof window !== 'undefined' && window.location && process.env.NODE_ENV !== 'test') {
+      window.location.href = '/login';
+    } else {
+      navigate('/login');
+    }
   }
 
   async function handleSelectOrg(organizationId: string) {
@@ -194,8 +179,17 @@ export function useAppLayout() {
   }
 
   let currentOrg: OrgSummary | null = null;
+  const sessionActiveOrgId = (
+    session.data?.session as { activeOrganizationId?: string | null } | undefined
+  )?.activeOrganizationId;
+
   if (activeOrg.data) {
     currentOrg = activeOrg.data;
+  } else if (sessionActiveOrgId && userOrgs.data) {
+    const found = userOrgs.data.find((o) => o.id === sessionActiveOrgId);
+    if (found) {
+      currentOrg = found;
+    }
   } else if (userOrgs.data && userOrgs.data.length > 0) {
     currentOrg = userOrgs.data[0];
   }

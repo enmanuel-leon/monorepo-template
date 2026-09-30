@@ -26,6 +26,7 @@
   },
   "auth": {
     "signIn": "Sign In",
+    "signOut": "Sign Out",
     "signUp": "Sign Up",
     "signInTitle": "Welcome back",
     "signUpTitle": "Create your account",
@@ -234,7 +235,11 @@
     "allTab": "All",
     "memberRemovedTitle": "Removed from Organization",
     "removedFromOrgToast": "Your access to {{orgName}} was removed. Switched to personal workspace.",
-    "memberRemovedToast": "You have been removed from this organization."
+    "memberRemovedToast": "You have been removed from this organization.",
+    "forbiddenAccess": "You do not have access to this organization.",
+    "noOrganizationsLeft": "You no longer belong to any organization. Please create one to continue.",
+    "removedSelectAnother": "You were removed from the active organization. Please select another to continue.",
+    "autoSwitchedSingleOrg": "You were removed from the previous organization and switched to {{orgName}}."
   },
   "invitationModal": {
     "title": "Organization Invitation",

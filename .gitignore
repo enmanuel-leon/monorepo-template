@@ -44,3 +44,9 @@ lerna-debug.log*
 # SonarCloud
 .sonar/
 .scannerwork/
+
+# CodeGraph local database, cache and state
+.codegraph/
+*.codegraph.db
+codegraph-cache/
+.codegraph_history/

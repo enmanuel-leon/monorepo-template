@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma.js';
+import { AUTH_ERROR_CODES } from '../constants/auth.constants.js';
 
 export interface CreateItemInput {
   title: string;
@@ -56,7 +57,7 @@ export async function createItem(input: CreateItemInput) {
     });
 
     if (!membership) {
-      throw new Error('FORBIDDEN_ORGANIZATION_ACCESS');
+      throw new Error(AUTH_ERROR_CODES.FORBIDDEN_ORGANIZATION_ACCESS);
     }
   }
 

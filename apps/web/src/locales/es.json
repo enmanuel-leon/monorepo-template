@@ -26,6 +26,7 @@
   },
   "auth": {
     "signIn": "Iniciar Sesión",
+    "signOut": "Cerrar Sesión",
     "signUp": "Crear Cuenta",
     "signInTitle": "Bienvenido de nuevo",
     "signUpTitle": "Crea tu cuenta",
@@ -234,7 +235,11 @@
     "allTab": "Todas",
     "memberRemovedTitle": "Desvinculado de la Organización",
     "removedFromOrgToast": "Tu acceso a {{orgName}} ha sido revocado. Has sido redirigido a tu espacio personal.",
-    "memberRemovedToast": "Has sido dado de baja de esta organización."
+    "memberRemovedToast": "Has sido dado de baja de esta organización.",
+    "forbiddenAccess": "No tienes acceso a esta organización.",
+    "noOrganizationsLeft": "Ya no perteneces a ninguna organización. Por favor, crea una para continuar.",
+    "removedSelectAnother": "Has sido removido de la organización activa. Por favor, selecciona otra para continuar.",
+    "autoSwitchedSingleOrg": "Has sido removido de la organización anterior y se cambió a {{orgName}}."
   },
   "invitationModal": {
     "title": "Invitación a Organización",

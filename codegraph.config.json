@@ -1,0 +1,17 @@
+{
+  "maxDepth": 1,
+  "includeDefinitionsOnly": true,
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.turbo/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/coverage/**",
+    "**/*.lock",
+    "**/package-lock.json",
+    "**/pnpm-lock.yaml",
+    "**/prisma/generated/**",
+    "**/.git/**"
+  ]
+}

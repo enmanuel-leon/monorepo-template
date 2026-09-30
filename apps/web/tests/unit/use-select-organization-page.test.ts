@@ -126,7 +126,7 @@ describe('useSelectOrganizationPage Hook Unit Tests', () => {
     });
     expect(invalidateSpy).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
-    expect(hook.current.selectingOrgId).toBe('org-test-1');
+    expect(hook.current.selectingOrgId).toBeNull();
     hook.unmount();
   });
 

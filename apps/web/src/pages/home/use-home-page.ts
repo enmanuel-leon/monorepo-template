@@ -46,8 +46,17 @@ export function useHomePage() {
   const userOrgs = authClient.useListOrganizations();
 
   let organization: OrgSummary | null = null;
+  const sessionActiveOrgId = (
+    session.data?.session as { activeOrganizationId?: string | null } | undefined
+  )?.activeOrganizationId;
+
   if (activeOrg.data) {
     organization = activeOrg.data;
+  } else if (sessionActiveOrgId && userOrgs.data) {
+    const found = userOrgs.data.find((o) => o.id === sessionActiveOrgId);
+    if (found) {
+      organization = found;
+    }
   } else if (userOrgs.data && userOrgs.data.length > 0) {
     organization = userOrgs.data[0];
   }
