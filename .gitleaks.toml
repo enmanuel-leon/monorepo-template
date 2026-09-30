@@ -1,0 +1,14 @@
+# Gitleaks configuration file for monorepo-template
+title = "monorepo-template gitleaks config"
+
+[allowlist]
+description = "Global allowlist for example environment files, tests, and documentation"
+paths = [
+  '''^\.env\.example$''',
+  '''^apps/api/\.env\.example$''',
+  '''^apps/web/\.env\.example$''',
+  '''^apps/api/tests/.*''',
+  '''^apps/web/tests/.*''',
+  '''^openwiki/.*''',
+]
+regexes = ['''sqp_[a-f0-9]{40}''', '''TestPassword123!''', '''mock-secret-key''']

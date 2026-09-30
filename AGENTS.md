@@ -119,9 +119,12 @@ All functions must maintain a Sonar Cognitive Complexity score of **15 or lower*
 - **Local Dev:** Keep environment variables inside `apps/api/.env` and `apps/web/.env`. Never commit `.env` files to Git.
 - **Vite Client (`VITE_*`):** Variables are compiled at build-time (`pnpm build`).
 
-### 2.10 English Documentation Policy
+### 2.10 Strict English Documentation & Language Policy
 
-All code comments, commit messages, JSDoc, and markdown documentation MUST be written in English.
+All project documentation, Markdown files (`README.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, `openwiki/*.md`), code comments, commit messages, JSDoc/TSDoc annotations, terminal outputs, PR descriptions, and server transactional email templates MUST be written in technical English by default.
+
+- **Sole Permitted Exception:** End-user localized language catalogs in the frontend (`apps/web/src/locales/es.json`) and specific localized email templates when the target user's locale is explicitly set to Spanish (`user.locale === 'es'`).
+- In backend email templates and notifications, the fallback/default language MUST always be English.
 
 ### 2.11 SemVer & User-Centric CHANGELOG Governance
 
@@ -148,6 +151,13 @@ members, invitation history, transactions, etc.) MUST implement server-side pagi
 - **Prisma Query Standard:** Database queries must execute concurrently with total count
   retrieval: `skip: (page - 1) * pageSize`, `take: pageSize`, alongside
   `prisma.<model>.count({ where })`.
+
+### 2.13 Secrets Leak Prevention & Gitleaks Standard
+
+- **Strict Ban on Hardcoded Secrets:** Committing API keys, private certificates, JWT secrets, database passwords, or auth tokens to Git is strictly prohibited.
+- **Automated Pre-Commit Protection:** Gitleaks runs on staged changes in the pre-commit Git hook (`pnpm check:secrets` via `.husky/pre-commit`). Any detected secret immediately aborts the commit.
+- **CI Quality Gate:** All pushes and PRs are verified by Gitleaks in GitHub Actions (`.github/workflows/security.yml`).
+- **Configuration & Exclusions:** Global allowlists reside strictly in `.gitleaks.toml` at repository root for test mocks and example environment templates.
 
 ---
 
@@ -323,4 +333,6 @@ Before declaring any engineering task complete, verify:
 - [ ] React functional component props typed with `Readonly<Props>`.
 - [ ] Database changes managed exclusively via Prisma Migrate (`apps/api/prisma/migrations/`).
 - [ ] Verification command suite executed and 100% green (`pnpm check`, `pnpm audit`, `pnpm knip`).
+- [ ] Secrets leak scan executed and passed (`pnpm check:secrets`).
+- [ ] All documentation, comments, and default email templates written in English.
 - [ ] Mandatory User Approval obtained before executing `git commit` or `git push`.

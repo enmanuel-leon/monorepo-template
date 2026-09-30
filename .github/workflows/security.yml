@@ -54,8 +54,8 @@ jobs:
                     || '') }}
         run: |
           if [ -n "$GITLEAKS_LOG_OPTS" ]; then
-            gitleaks detect --source . --no-banner --verbose --exit-code 1 \
+            gitleaks detect --source . --config .gitleaks.toml --no-banner --verbose --exit-code 1 \
               --log-opts="$GITLEAKS_LOG_OPTS"
           else
-            gitleaks detect --source . --no-banner --verbose --exit-code 1
+            gitleaks detect --source . --config .gitleaks.toml --no-banner --verbose --exit-code 1
           fi

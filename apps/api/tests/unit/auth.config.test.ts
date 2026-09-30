@@ -106,7 +106,7 @@ describe('Auth Configuration and Helper Unit Tests', () => {
     );
   });
 
-  it('tests emailOTP sendVerificationOTP with Spanish (default) locale', async () => {
+  it('tests emailOTP sendVerificationOTP with English (default) locale', async () => {
     const emailOtpPlugin = auth.options.plugins?.find((p: any) => p.id === 'email-otp') as any;
     expect(emailOtpPlugin).toBeDefined();
     expect(emailOtpPlugin.options?.sendVerificationOTP).toBeDefined();
@@ -115,38 +115,38 @@ describe('Auth Configuration and Helper Unit Tests', () => {
     const sendEmailSpy = vi.spyOn(emailService, 'sendEmail').mockResolvedValue(undefined);
 
     await sendOtpFn(
-      { email: 'user-es@example.com', otp: '123456', type: 'email-verification' },
+      { email: 'user-default@example.com', otp: '123456', type: 'email-verification' },
       undefined,
     );
 
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
     expect(sendEmailSpy).toHaveBeenCalledWith(
-      'user-es@example.com',
-      'Tu código de verificación de 6 dígitos',
+      'user-default@example.com',
+      'Your 6-digit verification code',
       expect.stringContaining('123456'),
     );
   });
 
-  it('tests emailOTP sendVerificationOTP with English locale via x-app-locale', async () => {
+  it('tests emailOTP sendVerificationOTP with Spanish locale via x-app-locale', async () => {
     const emailOtpPlugin = auth.options.plugins?.find((p: any) => p.id === 'email-otp') as any;
     const sendOtpFn = emailOtpPlugin.options.sendVerificationOTP;
     const sendEmailSpy = vi.spyOn(emailService, 'sendEmail').mockResolvedValue(undefined);
 
     const mockRequest = {
       headers: new Headers({
-        'x-app-locale': 'en',
+        'x-app-locale': 'es',
       }),
     };
 
     await sendOtpFn(
-      { email: 'user-en@example.com', otp: '654321', type: 'email-verification' },
+      { email: 'user-es@example.com', otp: '654321', type: 'email-verification' },
       mockRequest,
     );
 
     expect(sendEmailSpy).toHaveBeenCalledTimes(1);
     expect(sendEmailSpy).toHaveBeenCalledWith(
-      'user-en@example.com',
-      'Your 6-digit verification code',
+      'user-es@example.com',
+      'Tu código de verificación de 6 dígitos',
       expect.stringContaining('654321'),
     );
   });

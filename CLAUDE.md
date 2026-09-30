@@ -8,7 +8,8 @@ This repository is a production-ready fullstack monorepo template built with Nod
 
 - `pnpm dev` — Start development servers for API & Web via Turborepo (`http://localhost:5173`)
 - `pnpm cli` — Interactive SRE & Developer CLI console (Clack) for DB, Redis, SMTP test, and Docker management
-- `pnpm check` — Run format check (`oxfmt --check`), oxlint, typecheck, and vitest suite
+- `pnpm check` — Run format check (`oxfmt --check`), oxlint, typecheck, vitest suite, and secrets scan
+- `pnpm check:secrets` — Run Gitleaks secret leak detection on staged files (or --all for history)
 - `pnpm prepush:verify` — Full pre-push verification (format, lint, typecheck, tests, build)
 - `pnpm --filter api test:coverage` — Run Vitest suite with V8 LCOV code coverage
 - `pnpm knip` — Scan for dead code, unused exports, and unlisted dependencies
@@ -118,9 +119,15 @@ This repository is a production-ready fullstack monorepo template built with Nod
 - Stage only intended files. Never stage secrets, `.env` files, generated output, or unrelated user changes.
 - Keep unrelated concerns in separate commits and report the commit hash and included files after committing.
 
+### 13. Secrets Leak Prevention & Gitleaks Standard
+
+- Committing credentials, private certificates, database passwords, JWT secrets, or cloud tokens to Git is strictly prohibited.
+- Gitleaks runs on staged changes in the pre-commit hook (`.husky/pre-commit` via `pnpm check:secrets`).
+- Global allowlists for test mocks and example templates reside strictly in `.gitleaks.toml`.
+
 ---
 
-## 13. Closing Checklist for AI Agents
+## 14. Closing Checklist for AI Agents
 
 Before declaring any task complete, verify:
 
@@ -135,4 +142,6 @@ Before declaring any task complete, verify:
 - [ ] React functional component props typed with `Readonly<Props>`.
 - [ ] Database changes managed exclusively via Prisma Migrate (`apps/api/prisma/migrations/`).
 - [ ] Verification command suite executed and 100% green (`pnpm check`, `pnpm audit`, `pnpm knip`).
+- [ ] Secrets leak scan executed and passed (`pnpm check:secrets`).
+- [ ] All documentation, comments, and default email templates written in English.
 - [ ] Mandatory User Approval obtained before executing `git commit` or `git push`.
