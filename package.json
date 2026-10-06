@@ -33,6 +33,7 @@
     "postinstall": "pnpm prisma:generate",
     "prepare": "husky",
     "test:coverage": "turbo test:coverage",
+    "wiki:update": "pnpm dlx openwiki@0.3.1 code --update --print",
     "sonar:scan": "sonar-scanner"
   },
   "devDependencies": {
