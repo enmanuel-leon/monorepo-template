@@ -1,8 +1,8 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 import { env } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
 
-let transporter: nodemailer.Transporter | null = null;
+let transporter: Transporter | null = null;
 
 if (env.EMAIL_ENABLED && env.SMTP_HOST) {
   const isSecure = env.SMTP_PORT === 465;

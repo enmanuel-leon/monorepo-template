@@ -7,9 +7,9 @@ overrides:
   'postcss>nanoid': '^3.3.17'
   '@fastify/static': '10.1.2'
   '@hono/node-server': '2.0.12'
-  brace-expansion: '5.0.9'
+  brace-expansion: '5.0.12'
   fast-uri: '3.1.8'
-  js-yaml: '5.2.2'
+  js-yaml: '5.4.3'
   react-router: '8.3.0'
   uuid: '11.1.1'
   valibot: '1.4.2'
@@ -17,9 +17,12 @@ overrides:
   mysql2: '3.24.4'
   vitest: '4.1.11'
   '@vitest/mocker': '4.1.11'
-  nodemailer: '9.1.1'
+  nodemailer: '10.0.15'
   '@simplewebauthn/server': '13.3.3'
   'deepmerge-ts': '8.0.2'
+  tinypool: '2.2.0'
+  source-map-js: '1.2.2'
+  fast-copy: '4.1.2'
 
 packages:
   - 'apps/*'
@@ -79,7 +82,7 @@ catalog:
   # Utilities
   pino: 10.3.1
   pino-pretty: 13.1.3
-  nodemailer: 9.1.1
+  nodemailer: 10.0.15
   '@aws-sdk/client-s3': 3.1068.0
   '@aws-sdk/s3-request-presigner': 3.1068.0
   '@google-cloud/storage': 7.21.0
@@ -113,3 +116,5 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   - hono@4.13.9
+  - fast-copy@4.1.2
+  - js-yaml@5.4.3
