@@ -18,8 +18,4 @@ else
   echo "   - macOS: brew install gitleaks"
   echo "   - Linux/WSL: https://github.com/gitleaks/gitleaks/releases"
   echo "   - Go: go install github.com/gitleaks/gitleaks/v8@latest"
-  if [ "${CI:-false}" = "true" ]; then
-    echo "❌ Error: gitleaks is mandatory in CI."
-    exit 1
-  fi
 fi

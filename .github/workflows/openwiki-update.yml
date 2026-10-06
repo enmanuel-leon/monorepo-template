@@ -17,7 +17,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: main
           fetch-depth: 0
           filter: blob:none
 
@@ -56,7 +56,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: main
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -91,7 +91,7 @@ jobs:
             AGENTS.md
             CLAUDE.md
           branch: openwiki/update
-          base: develop
+          base: main
           commit-message: 'docs: update OpenWiki'
           title: 'docs: update OpenWiki'
           body: |

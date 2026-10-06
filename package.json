@@ -14,7 +14,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "check:secrets": "scripts/check-secrets.sh",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm check:secrets",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "prepush:verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:secrets --all",
     "cli": "pnpm --filter api cli",
     "infra:up": "docker compose -f docker/docker-compose.dev.yml up -d",

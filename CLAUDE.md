@@ -8,7 +8,7 @@ This repository is a production-ready fullstack monorepo template built with Nod
 
 - `pnpm dev` — Start development servers for API & Web via Turborepo (`http://localhost:5173`)
 - `pnpm cli` — Interactive SRE & Developer CLI console (Clack) for DB, Redis, SMTP test, and Docker management
-- `pnpm check` — Run format check (`oxfmt --check`), oxlint, typecheck, vitest suite, and secrets scan
+- `pnpm check` — Run format check (`oxfmt --check`), oxlint, typecheck, and vitest suite
 - `pnpm check:secrets` — Run Gitleaks secret leak detection on staged files (or --all for history)
 - `pnpm prepush:verify` — Full pre-push verification (format, lint, typecheck, tests, build)
 - `pnpm --filter api test:coverage` — Run Vitest suite with V8 LCOV code coverage

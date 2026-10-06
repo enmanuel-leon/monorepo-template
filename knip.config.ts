@@ -1,7 +1,7 @@
 import type { KnipConfig } from 'knip';
 
 const config: KnipConfig = {
-  ignoreBinaries: ['scripts/kill-ports.sh', 'sonar-scanner'],
+  ignoreBinaries: ['scripts/check-secrets.sh', 'scripts/kill-ports.sh', 'sonar-scanner'],
   workspaces: {
     'apps/api': {
       entry: [
